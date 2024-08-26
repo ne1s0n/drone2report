@@ -1,0 +1,4 @@
+name: drone2report
+channels:
+  - defaults
+prefix: /home/nelson/miniconda3/envs/drone2report
