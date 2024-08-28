@@ -1,11 +1,25 @@
 #stub for main file
 import sys
+import pprint
+
+#drone2report specific submodules
 from d2r.config import read_config
 
 def drone2report(infile):
 	#reading the config in
-	conf = read_config(infile)
-	print(conf)
+	datasets, analyses, renders = read_config(infile)
+	
+	#printing the current status
+	print('ALL DATASETS')
+	for o in datasets:
+		print(o.to_string())
+	print('ALL ANALYSES')
+	for o in analyses:
+		print(o.to_string())
+	print('ALL RENDERS')
+	for o in renders:
+		print(o.to_string())
+	
 
 if __name__ == "__main__":
 	print('Welcome to Drone2Report!')
