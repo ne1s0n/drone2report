@@ -11,27 +11,9 @@
 import configparser
 import os
 
-class Dataset:
-	def __init__(self, title, body):
-		#constructor
-		self.name = 'stub'
-	def to_string(self):
-		return('stub')
-
-class Analysis:
-	def __init__(self, title, body):
-		#constructor
-		self.name = 'stub'
-	def to_string(self):
-		return('stub')
-
-class Render:
-	def __init__(self, title, body):
-		#constructor
-		self.name = 'stub'
-	def to_string(self):
-		return('stub')
-
+from d2r.dataset import Dataset
+from d2r.render import Render
+from d2r.analysis import Analysis
 
 def read_config(infile):
 	'''

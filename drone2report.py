@@ -13,6 +13,7 @@ def drone2report(infile):
 	print('ALL DATASETS')
 	for o in datasets:
 		print(o.to_string())
+		pprint.pprint(o.get_config())
 	print('ALL ANALYSES')
 	for o in analyses:
 		print(o.to_string())
