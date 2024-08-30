@@ -48,11 +48,12 @@ class Dataset:
 		print("Rows:", ds.RasterYSize)  # number of rows
 		print("Band count:", ds.RasterCount)  # number of bands
 
-		output=np.zeros(shape=(ds.RasterYSize, ds.RasterXSize, 3))
-		output[:, :, 0] = ds.GetRasterBand(1).ReadAsArray()
-		output[:, :, 1] = ds.GetRasterBand(2).ReadAsArray()
-		output[:, :, 2] = ds.GetRasterBand(3).ReadAsArray()
-		return(output)
+		#putting all the data in a numpy array
+		output=np.zeros(shape=(ds.RasterYSize, ds.RasterXSize, ds.RasterCount))
+		for i in range(ds.RasterCount):
+			output[:, :, i] = ds.GetRasterBand(i+1).ReadAsArray()
+		
+		return(output, ds.GetProjection())
 
 	def get_channels(self):
 		return 'RGB'
