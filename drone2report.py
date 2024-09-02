@@ -24,6 +24,16 @@ def drone2report(infile):
 	#test load
 	foo = datasets[0].load()
 	
+	#computing an index
+	#import d2r.indexes
+	#print('Computing GLI')
+	#mygli = d2r.indexes.GLI(foo['img'], datasets[0].channels)
+
+	#some derived stats
+	#import numpy as np
+	#print('max value:', np.max(mygli))
+	#print('min value:', np.min(mygli))
+	#print('avg value:', np.average(mygli))
 
 if __name__ == "__main__":
 	print('Welcome to Drone2Report!')
