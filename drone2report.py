@@ -21,6 +21,9 @@ def drone2report(infile):
 	for o in renders:
 		print(o.to_string())
 	
+	#test load
+	foo = datasets[0].load()
+	
 
 if __name__ == "__main__":
 	print('Welcome to Drone2Report!')

@@ -1,8 +1,7 @@
 #This module contains the information for one single dataset. When instantiated
 #it does not really read the data, but it checks for the required files to be existing
 
-from osgeo import gdal
-import numpy as np
+import importlib
 import d2r.config
 
 class Dataset:
@@ -52,45 +51,17 @@ class Dataset:
 	def get_config(self):
 		return(self.config)
 		
-	def get_image(self):
-		ds = gdal.Open(self.orthomosaic_file, gdal.GA_ReadOnly)
-
-		print("Projection: ", ds.GetProjection())  # get projection
-		print("Columns:", ds.RasterXSize)  # number of columns
-		print("Rows:", ds.RasterYSize)  # number of rows
-		print("Band count:", ds.RasterCount)  # number of bands
-
-		#putting all the data in a numpy array
-		output=np.zeros(shape=(ds.RasterYSize, ds.RasterXSize, ds.RasterCount))
-		for i in range(ds.RasterCount):
-			output[:, :, i] = ds.GetRasterBand(i+1).ReadAsArray()
-		
-		return(output, ds.GetProjection())
-
 	def get_channels(self):
 		return self.channels
-	def get_polygons(self):
-		### load and return ROIs as geometric polygons 
-		return None
-
+			
 	def load(self):
 		"""loads the dataset, returns a dictionary"""
-		return(load_tif_multichannel(self))
-	
-	def load_tif_multichannel(obj):
-		ds = gdal.Open(obj.orthomosaic_file, gdal.GA_ReadOnly)
+		#dynamically import the submodule with all the formats definitions
+		submodule = importlib.import_module('d2r.dataset_formats')
 
-		print("Projection: ", ds.GetProjection())  # get projection
-		print("Columns:", ds.RasterXSize)  # number of columns
-		print("Rows:", ds.RasterYSize)  # number of rows
-		print("Band count:", ds.RasterCount)  # number of bands
-
-		#putting all the data in a numpy array
-		output=np.zeros(shape=(ds.RasterYSize, ds.RasterXSize, ds.RasterCount))
-		for i in range(ds.RasterCount):
-			output[:, :, i] = ds.GetRasterBand(i+1).ReadAsArray()
+		#retrieve the loading function for this specific format
+		load_function = getattr(submodule, self.type)
 		
-		return(output, ds.GetProjection())
-			
-	
-	
+		#ready to load
+		return load_function(self)
+
