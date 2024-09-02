@@ -16,4 +16,8 @@ def tif_multichannel(obj):
 	for i in range(ds.RasterCount):
 		output[:, :, i] = ds.GetRasterBand(i+1).ReadAsArray()
 	
-	return(output, ds.GetProjection())
+	return({
+		'info' : ds.GetProjection(),
+		'img' : output,
+		'polygons' : None
+	})
