@@ -8,9 +8,15 @@
 #		'B' : 2
 #	}
 
+import numpy as np
+
 def GLI(img, channels):
-	red = channels['R']
-	green = channels['G']
-	blue = channels['B']
+	"""Green leaf index"""
+	red = channels['red']
+	green = channels['green']
+	blue = channels['blue']
 	return(2 * img[:, :, green] - img[:, :, red] - img[:, :, blue]) / (2 * img[:, :, green] + img[:, :, red] + img[:, :, blue])   
 
+def random(img, channels):
+	"""a random value between zero and one"""
+	return(np.random.rand(img.shape[0], img.shape[1]))   

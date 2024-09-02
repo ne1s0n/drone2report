@@ -58,16 +58,21 @@ def read_config(infile):
 			found = True
 		if not found:
 			raise ValueError('Bad section name: ' + op)
-			
-		
-		#let's go through each field
-		#for key in config[section]:
-			#some on-the-fly interpolations for common values in all sections
-		#	if key == 'skip_if_already_done':
-	#			res[op][opid][key] = config[section].getboolean(key)	
-#			else:
-				#just copying the value
-#				res[op][opid][key] = config[section][key]
-	
 	return(datasets, analyses, renders)
 
+def parse_boolean(value):
+	"""parses an incoming config value as boolean"""
+	true_values = ('true', '1', 'yes', 'y', 'on')
+	false_values = ('false', '0', 'no', 'n', 'off')
+
+	value = value.lower()
+	if value in true_values:
+		return True
+	elif value in false_values:
+		return False
+	else:
+		raise ValueError(f"Cannot convert {value} to a boolean.")
+ 
+def parse_channels(value):
+	"""parses channels: comma separated string values, which will be forced to lowercase and removed of spaces"""
+	return value.lower().replace(" ", "").split(',')
