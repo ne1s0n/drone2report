@@ -2,9 +2,11 @@
 #it does not really read the data, but it checks for the required files to be existing
 
 import importlib
+import numpy as np
 import d2r.config
 from osgeo import gdal
 from skimage.draw import polygon
+
 
 class Dataset:
 	def __init__(self, title, body):
