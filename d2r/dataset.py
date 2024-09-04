@@ -90,7 +90,7 @@ class Dataset:
 		#let's find the polygon requested
 		geom = None
 		if (polygon_id is not None):
-			shape = self.shapes.loc[shapes[polygon_field] == polygon_id]
+			shape = self.shapes.loc[self.shapes[polygon_field] == polygon_id]
 			#sanity check: did we select just one row?
 			if len(shape.index) != 1:
 				raise ValueError('The choice of polygon_field + polygon_id selects either zero or too many polygons:', polygon_field, polygon_id)
