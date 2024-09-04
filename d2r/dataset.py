@@ -90,20 +90,20 @@ class Dataset:
 		#let's find the polygon requested
 		geom = None
 		if (polygon_id is not None):
-			shape = shapes.loc[shapes[polygon_field] == polygon_id]
+			shape = self.shapes.loc[shapes[polygon_field] == polygon_id]
 			#sanity check: did we select just one row?
 			if len(shape.index) != 1:
 				raise ValueError('The choice of polygon_field + polygon_id selects either zero or too many polygons:', polygon_field, polygon_id)
 			geom = shape.geometry
 		if (polygon_order is not None):
-			geom = shapes.geometry[polygon_order]
+			geom = self.shapes.geometry[polygon_order]
 		
 		#extract the bounding box for the geometry from the raster dataset
 		#data is in channel-last at this point format
 		raster_box, x_offset, y_offset = get_raster_bounding_box(self.ds, geom)
 		
 		#mask the raster box with the current geometry
-		raster_box = clip_geometry(ds, raster_box, geom, x_offset, y_offset)
+		raster_box = clip_geometry(self.ds, raster_box, geom, x_offset, y_offset)
 		
 		#and we are done
 		return(raster_box)
