@@ -3,6 +3,7 @@
 
 import numpy as np
 import d2r.config
+import warnings
 from osgeo import gdal
 from skimage.draw import polygon
 import geopandas as gpd
@@ -60,7 +61,7 @@ class Dataset:
 		
 	def get_channels(self):
 		return self.channels
-			
+	
 	def __load(self):
 		"""initializes the dataset structures"""
 		print('opening image file ' + self.config['orthomosaic_file'])
@@ -110,7 +111,14 @@ class Dataset:
 				raise ValueError('The choice of polygon_field + polygon_id selects either zero or too many polygons:', polygon_field, polygon_id)
 			geom = shape.geometry
 		if (polygon_order is not None):
-			geom = self.shapes.geometry[polygon_order]
+			shape = self.shapes.iloc[polygon_order, :]
+			geom = shape.geometry
+		
+		#check if the polygon is inside the raster data
+		if not self.is_bounding_box_inside(geom):
+			msg = 'Requested data for a geometry outside the image limits. Returning None\n' + shape.to_string()
+			warnings.warn(msg)
+			return None
 		
 		#extract the bounding box for the geometry from the raster dataset
 		#data is in channel-last at this point format
@@ -211,3 +219,13 @@ class Dataset:
 		
 		#masking the original raster
 		return(mask)
+
+	def is_bounding_box_inside(self, geom):
+		"""returns True if all points of the geometry are pixel-wise inside the image, False otherwise"""
+		#getting pixel-wise limits of the passed geometry
+		x_size, y_size, x_offset, y_offset = self.get_bounding_box_size_and_offset(geom)
+		print('checking', x_size, y_size, x_offset, y_offset, 'against', self.ds.RasterXSize, self.ds.RasterYSize)
+		
+		#checking if all values are inside the raster size
+		return (x_offset >= 0) and (y_offset >= 0) and (x_offset + x_size < self.ds.RasterXSize) and (y_offset + y_size < self.ds.RasterYSize)
+		

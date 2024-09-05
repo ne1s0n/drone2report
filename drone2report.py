@@ -23,11 +23,20 @@ def drone2report(infile):
 	
 	
 	#saving a rastered block, for reference
-	rb = datasets[0].get_geom_raster(polygon_order=0)
+	for i in range(len(datasets[0].shapes)):
+		rb = datasets[0].get_geom_raster(polygon_order=i)
+		if rb is not None:
+			print('found a valid shape!')
+			break
+	
+	print(rb.shape)
+	
 	from PIL import Image
 	import numpy as np
+	#foo = Image.fromarray(rb[:, :, [5, 3, 1]].astype(np.uint8))
 	foo = Image.fromarray(rb.astype(np.uint8))
 	foo.save("/home/nelson/research/drone2report/test_data/bounding_box_first_polygon_masked2.png")
+
 
 if __name__ == "__main__":
 	print('Welcome to Drone2Report!')
