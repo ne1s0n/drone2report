@@ -21,19 +21,13 @@ def drone2report(infile):
 	for o in renders:
 		print(o.to_string())
 	
-	#test load
-	foo = datasets[0].load()
 	
-	#computing an index
-	#import d2r.indexes
-	#print('Computing GLI')
-	#mygli = d2r.indexes.GLI(foo['img'], datasets[0].channels)
-
-	#some derived stats
-	#import numpy as np
-	#print('max value:', np.max(mygli))
-	#print('min value:', np.min(mygli))
-	#print('avg value:', np.average(mygli))
+	#saving a rastered block, for reference
+	rb = datasets[0].get_geom_raster(polygon_order=0)
+	from PIL import Image
+	import numpy as np
+	foo = Image.fromarray(rb.astype(np.uint8))
+	foo.save("/home/nelson/research/drone2report/test_data/bounding_box_first_polygon_masked2.png")
 
 if __name__ == "__main__":
 	print('Welcome to Drone2Report!')

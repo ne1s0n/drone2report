@@ -1,12 +1,12 @@
 #This module contains the information for one single dataset. When instantiated
 #it does not really read the data, but it checks for the required files to be existing
 
-import importlib
 import numpy as np
 import d2r.config
 from osgeo import gdal
 from skimage.draw import polygon
-
+import geopandas as gpd
+from osgeo import osr
 
 class Dataset:
 	def __init__(self, title, body):
@@ -49,7 +49,7 @@ class Dataset:
 			raise ValueError('Missing "channels" field for dataset: ' + title)
 			
 		#we are ready to initialize the data
-		self.load()
+		self.__load()
 			
 	def to_string(self):
 		return(self.name + ' (' + self.type + ')') 
@@ -61,18 +61,30 @@ class Dataset:
 	def get_channels(self):
 		return self.channels
 			
-	def load(self):
-		"""loads the dataset"""
-		#dynamically import the submodule with all the formats definitions
-		submodule = importlib.import_module('d2r.dataset_formats')
-
-		#retrieve the loading function for this specific format
-		load_function = getattr(submodule, self.type)
+	def __load(self):
+		"""initializes the dataset structures"""
+		print('opening image file ' + self.config['orthomosaic_file'])
+		self.ds = gdal.Open(self.config['orthomosaic_file'], gdal.GA_ReadOnly)
+		print("Projection: ", self.ds.GetProjection())  # get projection
+		print("Columns:", self.ds.RasterXSize)  # number of columns
+		print("Rows:", self.ds.RasterYSize)  # number of rows
+		print("Band count:", self.ds.RasterCount)  # number of bands
 		
-		#ready to load
-		self.ds, self.shapes = load_function(self)
+		#opening shapes file
+		print('opening image file ' + self.config['shapes_file'])
+		self.shapes = gpd.read_file(self.config['shapes_file'])
+		
+		# let's play it safe and convert the orthomosaic projection to an osr SpatialReference object
+		spatial_ref = osr.SpatialReference()
+		spatial_ref.ImportFromWkt(self.ds.GetProjection())
+
+		# Convert to a proj4 string or EPSG code that geopandas can use
+		proj4_string = spatial_ref.ExportToProj4()
+
+		# Reproject the shapefile to match the orthomosaic's CRS
+		self.shapes = self.shapes.to_crs(proj4_string)
 	
-	def get_polygon_raster(self, polygon_id=None, polygon_field=None, polygon_order=None):
+	def get_geom_raster(self, polygon_id=None, polygon_field=None, polygon_order=None):
 		"""
 		Returns the raster data for the specified polygon
 		
@@ -86,7 +98,7 @@ class Dataset:
 		error is raised. 
 		"""
 		#interface 
-		if (polygon_id is None) ^ (polygon_order is None):
+		if not ((polygon_id is None) ^ (polygon_order is None)):
 			raise ValueError('One and only one way to select the polygon should be specified, either via a field or via a numeral')
 
 		#let's find the polygon requested
@@ -102,85 +114,100 @@ class Dataset:
 		
 		#extract the bounding box for the geometry from the raster dataset
 		#data is in channel-last at this point format
-		raster_box, x_offset, y_offset = get_raster_bounding_box(self.ds, geom)
+		raster_box = self.get_bounding_box_raster(geom)
 		
 		#mask the raster box with the current geometry
-		raster_box = clip_geometry(self.ds, raster_box, geom, x_offset, y_offset)
+		mask = self.get_geom_clipmask(geom)
+		
+		#applying the mask
+		raster_box = np.ma.masked_array(raster_box, mask)
 		
 		#and we are done
 		return(raster_box)
 
-def transform_coords(ds, point, source):
-	"""
-	Transforms the coordinates of a point between georeferenced and pixel
-	
-	Using the geotransformation present in the gdal dataset 'ds', transforms
-	the coordinates contained in 'point'. The applied transformatio will be 
-	from georeferenced to pixel if 'source' is equal to 'geo', or from pixel
-	to georeferenced if 'source' is equal to 'pix'. For any other value an
-	error will be raised.
-	If the parameter 'pixel_relative' is False (the default) the origin 
-	"""
-	forward_transform = ds.GetGeoTransform()
-	reverse_transform = gdal.InvGeoTransform(forward_transform)
-	
-	if source == 'geo':
-		return gdal.ApplyGeoTransform(reverse_transform, point[0], point[1])
-	if source == 'pix':
-		return gdal.ApplyGeoTransform(forward_transform, point[0], point[1])
-	raise ValueError('source needs to be either geo or pix, instead was:', str(source))
-
-def get_raster_bounding_box(ds, geom):
-	#the bounding box for the selected geometry, in georeferenced coordinates
-	x_min, y_min, x_max, y_max = geom.bounds
-
-	# geo -> pix
-	col1, row1 = transform_coords(ds, coords=(x_min, y_min), source='geo')
-	col2, row2 = transform_coords(ds, coords=(x_max, y_max), source='geo')
-	
-	#sanity check: if any coordinate is negative we are asking for a polygon
-	#outside the limits of the raster
-	if any(x < 0 for x in [col1, row1, col2, row2]):
-		raise ValueError('A polygon is out of the raster limits')
-
-	#define the region of interest in the required form
-	x_size = int(abs(col1 - col2))    # Width of the subset in pixels
-	y_size = int(abs(row1 - row2))    # Height of the subset in pixels
-	x_offset = int(np.min([col1, col2]))
-	y_offset = int(np.min([row1, row2]))
-
-	# Read the specified subset as an array
-	subset_array = ds.ReadAsArray(x_offset, y_offset, x_size, y_size)
-	
-	#we expect this to be in the shape: channel, columns, rows.
-	#we check, then move to channel-last format
-	if subset_array.shape[2] != ds.RasterCount:
-		raise ValueError('Data is not channel-first format')
-	subset_array = np.moveaxis(subset_array, 0, -1)
-
-	return(subset_array, x_offset, y_offset)
-
-def clip_geometry(ds, raster, geom, x_offset, y_offset):
-	#let's build a mask where to rasterize the geometry
-	mask = np.ones(raster.shape)
-
-	#converting the polygon coordinates to pixel coordinates
-	coords = list(geom.exterior.coords)
-	coords2 = np.zeros((len(coords), 2))
-
-	for i in range(len(coords)):
-		#from geo to pixel (absolute)
-		mycol, myrow = transform_coords(ds, coords=(coords[i][0], coords[i][1]), source='geo')
-		#from pixel (absolute) to image (relative)
-		mycol = mycol - x_offset                      
-		myrow = myrow - y_offset
-		#storing the results
-		coords2[i,0] = mycol
-		coords2[i,1] = myrow
+	def transform_coords(self, point, source):
+		"""
+		Transforms the coordinates of a point between georeferenced and pixel
 		
-	#drawing the polygon
-	rr, cc = polygon(coords2[:,1], coords2[:,0], mask.shape)
-	mask[rr, cc, :] = 0
-	
-	#masking the original raster
-	return(np.ma.masked_array(raster, mask=mask))
+		Using the geotransformation present in the 'ds' field (a gdal dataset), transforms
+		the coordinates contained in 'point'. The applied transformatio will be 
+		from georeferenced to pixel if 'source' is equal to 'geo', or from pixel
+		to georeferenced if 'source' is equal to 'pix'. For any other value an
+		error will be raised.
+		If the parameter 'pixel_relative' is False (the default) the origin 
+		"""
+		forward_transform = self.ds.GetGeoTransform()
+		reverse_transform = gdal.InvGeoTransform(forward_transform)
+		
+		if source == 'geo':
+			return gdal.ApplyGeoTransform(reverse_transform, point[0], point[1])
+		if source == 'pix':
+			return gdal.ApplyGeoTransform(forward_transform, point[0], point[1])
+		raise ValueError('source needs to be either geo or pix, instead was:', str(source))
+
+	def get_bounding_box_size_and_offset(self, geom):
+		""""from a georeferenced geometry to pixel coordinates (size and offset)"""
+		#the bounding box for the selected geometry, in georeferenced coordinates
+		x_min, y_min, x_max, y_max = geom.bounds
+
+		# geo -> pix
+		col1, row1 = self.transform_coords(point=(x_min, y_min), source='geo')
+		col2, row2 = self.transform_coords(point=(x_max, y_max), source='geo')
+		
+		#sanity check: if any coordinate is negative we are asking for a polygon
+		#outside the limits of the raster
+		if any(x < 0 for x in [col1, row1, col2, row2]):
+			raise ValueError('A polygon is out of the raster limits')
+
+		#define the region of interest in the required form
+		x_size = int(abs(col1 - col2))    # Width of the subset in pixels
+		y_size = int(abs(row1 - row2))    # Height of the subset in pixels
+		x_offset = int(np.min([col1, col2]))
+		y_offset = int(np.min([row1, row2]))
+		
+		return(x_size, y_size, x_offset, y_offset)
+		
+	def get_bounding_box_raster(self, geom):
+		"""get the raster data for the bounding box of the passed geometry"""
+		#getting pixel-wise size and offset of the passed geometry 
+		x_size, y_size, x_offset, y_offset = self.get_bounding_box_size_and_offset(geom)
+		
+		# Read the specified subset as an array
+		subset_array = self.ds.ReadAsArray(x_offset, y_offset, x_size, y_size)
+		
+		#we expect this to be in the shape: channel, columns, rows.
+		#we check, then move to channel-last format
+		if subset_array.shape[0] != self.ds.RasterCount:
+			raise ValueError('Data is not channel-first format')
+		subset_array = np.moveaxis(subset_array, 0, -1)
+
+		return(subset_array)
+
+	def get_geom_clipmask(self, geom):
+		"""get a raster clipmask for the passed geometry"""
+		#getting pixel-wise size and offset of the passed geometry 
+		x_size, y_size, x_offset, y_offset = self.get_bounding_box_size_and_offset(geom)
+		
+		#let's build a mask where to rasterize the geometry
+		mask = np.ones((y_size, x_size, self.ds.RasterCount))
+
+		#converting the polygon coordinates to pixel coordinates
+		coords = list(geom.exterior.coords)
+		coords2 = np.zeros((len(coords), 2))
+
+		for i in range(len(coords)):
+			#from geo to pixel (absolute)
+			mycol, myrow = self.transform_coords(point=(coords[i][0], coords[i][1]), source='geo')
+			#from pixel (absolute) to image (relative)
+			mycol = mycol - x_offset                      
+			myrow = myrow - y_offset
+			#storing the results
+			coords2[i,0] = mycol
+			coords2[i,1] = myrow
+			
+		#drawing the polygon
+		rr, cc = polygon(coords2[:,1], coords2[:,0], mask.shape)
+		mask[rr, cc, :] = 0
+		
+		#masking the original raster
+		return(mask)
