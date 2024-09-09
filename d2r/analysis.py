@@ -4,6 +4,9 @@ from osgeo import gdal
 import numpy as np
 from PIL import Image
 import d2r.config
+import d2r.dataset
+from skimage.draw import polygon
+
 
 class Analysis:
 	def __init__(self, title, config):
@@ -21,11 +24,12 @@ class Analysis:
 		return(getattr(self, self.title)(dataset))
 
 	def thumbnail(self, dataset):
-		#check if we should do the analysis or not
+		#the output path
 		outfile = os.path.join(self.config['outfolder'], 'thumb_' + dataset.title + '.png')
 		path = pathlib.Path(self.config['outfolder'])
-		path.mkdir(parents=True, exist_ok=True)
-		
+		path.mkdir(parents=True, exist_ok=True)		
+
+		#check if we should do the analysis or not
 		if os.path.isfile(outfile) and self.config.getboolean('skip_if_already_done'):
 			print('skipping. Output file already exists: ' + outfile)
 			return(None)
@@ -40,11 +44,18 @@ class Analysis:
 		resized_ds = gdal.Translate('', dataset.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
 		raster_output = resized_ds.ReadAsArray()
 		
-		#if more than one channel: move from channel-first to channel-last
-		if len(dataset.channels) > 1:
-			raster_output = np.moveaxis(raster_output, 0, -1)
+		#if onle one channel: let's replicate it so that it can go through the same cycles as the multichannel case
+		if len(dataset.channels) == 1:
+			newraster = np.zeros((3, raster_output.shape[0], raster_output.shape[1]))
+			newraster[0, :, :] = raster_output
+			newraster[1, :, :] = raster_output
+			newraster[2, :, :] = raster_output
+			raster_output = newraster
+
+		#move from channel-first to channel-last
+		raster_output = np.moveaxis(raster_output, 0, -1)
 		
-		#if more than three channels: focus on the specified channels
+		#if more than three channels: focus on the channels specified in the config 
 		if len(dataset.channels) > 3:
 			#parsing the list of requested channels
 			print ('Too many channels, subsetting to the three selected in config file')
@@ -54,11 +65,8 @@ class Analysis:
 			channels = [dataset.channels.index(x) for x in channels]
 			raster_output = raster_output[:, :, channels]
 		
-		#fix the nodata issue
+		#fix the nodata values
 		raster_output = np.ma.masked_equal(raster_output, int(dataset.config['nodata']))
-		
-		#if more than three channels, take the first three
-		print('current shape', raster_output.shape)
 		
 		#should we rescale to 0-255 ?
 		if self.config.getboolean('rescale'):
@@ -67,7 +75,17 @@ class Analysis:
 			raster_output = 255 * (raster_output - mymin) / (mymax - mymin)
 
 		#add polygons
-		#TODO
+		for i in range(len(dataset.shapes.index)):
+			sh = dataset.shapes.iloc[i,:].geometry
+			#converting the polygon coordinates to pixel coordinates
+			coords = list(sh.exterior.coords)
+			coords2 = np.zeros((len(coords), 2))
+			for i in range(len(coords)):
+				(coords2[i,0], coords2[i,1]) = d2r.dataset.transform_coords(resized_ds, point=(coords[i][0], coords[i][1]), source='geo')
+			
+			#drawing the polygon
+			rr, cc = polygon(coords2[:,1], coords2[:,0], raster_output.shape)
+			raster_output[rr, cc, :] = 255
 		
 		#save the thumbnail
 		foo = Image.fromarray(raster_output.astype(np.uint8))

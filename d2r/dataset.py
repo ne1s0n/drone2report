@@ -141,34 +141,14 @@ class Dataset:
 		#and we are done
 		return(raster_box)
 
-	def transform_coords(self, point, source):
-		"""
-		Transforms the coordinates of a point between georeferenced and pixel
-		
-		Using the geotransformation present in the 'ds' field (a gdal dataset), transforms
-		the coordinates contained in 'point'. The applied transformatio will be 
-		from georeferenced to pixel if 'source' is equal to 'geo', or from pixel
-		to georeferenced if 'source' is equal to 'pix'. For any other value an
-		error will be raised.
-		If the parameter 'pixel_relative' is False (the default) the origin 
-		"""
-		forward_transform = self.ds.GetGeoTransform()
-		reverse_transform = gdal.InvGeoTransform(forward_transform)
-		
-		if source == 'geo':
-			return gdal.ApplyGeoTransform(reverse_transform, point[0], point[1])
-		if source == 'pix':
-			return gdal.ApplyGeoTransform(forward_transform, point[0], point[1])
-		raise ValueError('source needs to be either geo or pix, instead was:', str(source))
-
 	def get_bounding_box_size_and_offset(self, geom):
 		""""from a georeferenced geometry to pixel coordinates (size and offset)"""
 		#the bounding box for the selected geometry, in georeferenced coordinates
 		x_min, y_min, x_max, y_max = geom.bounds
 
 		# geo -> pix
-		col1, row1 = self.transform_coords(point=(x_min, y_min), source='geo')
-		col2, row2 = self.transform_coords(point=(x_max, y_max), source='geo')
+		col1, row1 = transform_coords(self.ds, point=(x_min, y_min), source='geo')
+		col2, row2 = transform_coords(self.ds, point=(x_max, y_max), source='geo')
 		
 		#define the region of interest in the required form
 		x_size = int(abs(col1 - col2))    # Width of the subset in pixels
@@ -218,7 +198,7 @@ class Dataset:
 
 		for i in range(len(coords)):
 			#from geo to pixel (absolute)
-			mycol, myrow = self.transform_coords(point=(coords[i][0], coords[i][1]), source='geo')
+			mycol, myrow = transform_coords(self.ds, point=(coords[i][0], coords[i][1]), source='geo')
 			#from pixel (absolute) to image (relative)
 			mycol = mycol - x_offset                      
 			myrow = myrow - y_offset
@@ -242,3 +222,22 @@ class Dataset:
 		#checking if all values are inside the raster size
 		return (x_offset >= 0) and (y_offset >= 0) and (x_offset + x_size < self.ds.RasterXSize) and (y_offset + y_size < self.ds.RasterYSize)
 		
+def transform_coords(ds, point, source):
+	"""
+	Transforms the coordinates of a point between georeferenced and pixel
+	
+	Using the geotransformation present in the 'ds' a gdal dataset, transforms
+	the coordinates contained in 'point'. The applied transformatio will be 
+	from georeferenced to pixel if 'source' is equal to 'geo', or from pixel
+	to georeferenced if 'source' is equal to 'pix'. For any other value an
+	error will be raised.
+	If the parameter 'pixel_relative' is False (the default) the origin 
+	"""
+	forward_transform = ds.GetGeoTransform()
+	reverse_transform = gdal.InvGeoTransform(forward_transform)
+	
+	if source == 'geo':
+		return gdal.ApplyGeoTransform(reverse_transform, point[0], point[1])
+	if source == 'pix':
+		return gdal.ApplyGeoTransform(forward_transform, point[0], point[1])
+	raise ValueError('source needs to be either geo or pix, instead was:', str(source))
