@@ -3,6 +3,7 @@ import pathlib
 from osgeo import gdal
 import numpy as np
 from PIL import Image
+import d2r.config
 
 class Analysis:
 	def __init__(self, title, config):
@@ -18,7 +19,6 @@ class Analysis:
 		return(self.title)
 	def run(self, dataset):
 		return(getattr(self, self.title)(dataset))
-
 
 	def thumbnail(self, dataset):
 		#check if we should do the analysis or not
@@ -38,10 +38,27 @@ class Analysis:
 		#resize
 		#resized_ds = gdal.Warp('', dataset.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
 		resized_ds = gdal.Translate('', dataset.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
-		
-		#extract raster data, fix the nodata problem
 		raster_output = resized_ds.ReadAsArray()
+		
+		#if more than one channel: move from channel-first to channel-last
+		if len(dataset.channels) > 1:
+			raster_output = np.moveaxis(raster_output, 0, -1)
+		
+		#if more than three channels: focus on the specified channels
+		if len(dataset.channels) > 3:
+			#parsing the list of requested channels
+			print ('Too many channels, subsetting to the three selected in config file')
+			channels = d2r.config.parse_channels(self.config['channels'])
+			if len(channels) != 3:
+				raise ValueError('Too many channels in the config file: '+ self.config['channels'])
+			channels = [dataset.channels.index(x) for x in channels]
+			raster_output = raster_output[:, :, channels]
+		
+		#fix the nodata issue
 		raster_output = np.ma.masked_equal(raster_output, int(dataset.config['nodata']))
+		
+		#if more than three channels, take the first three
+		print('current shape', raster_output.shape)
 		
 		#should we rescale to 0-255 ?
 		if self.config.getboolean('rescale'):
