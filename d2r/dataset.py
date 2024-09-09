@@ -33,7 +33,7 @@ class Dataset:
 			elif key.lower() == 'type':
 				self.type = body[key]
 			elif key.lower() == 'skip':
-				self.skip = d2r.config.parse_boolean(body[key])
+				self.skip = body.getboolean(key)
 			elif key.lower() == 'channels':
 				self.channels = d2r.config.parse_channels(body[key])
 			elif key.lower() == 'type':
@@ -58,9 +58,10 @@ class Dataset:
 		return(self.meta)
 	def get_config(self):
 		return(self.config)
-		
 	def get_channels(self):
 		return self.channels
+	def get_raster_size(self):
+		return (self.ds.RasterXSize, self.ds.RasterYSize)
 	
 	def __load(self):
 		"""initializes the dataset structures"""
@@ -72,6 +73,12 @@ class Dataset:
 		print("Rows:", self.ds.RasterYSize)  # number of rows
 		print("Band count:", self.ds.RasterCount)  # number of bands
 		
+		#reading the nodata values
+		self.nodata = []
+		for i in range(self.ds.RasterCount):  # GDAL bands are 1-indexed
+			band = self.ds.GetRasterBand(i+1)
+			self.nodata.append(band.GetNoDataValue())
+    		
 		#opening shapes file
 		print('opening shape file ' + self.config['shapes_file'])
 		self.shapes = gpd.read_file(self.config['shapes_file'])

@@ -10,6 +10,7 @@
 
 import configparser
 import os
+import pprint
 
 from d2r.dataset import Dataset
 from d2r.render import Render
@@ -60,18 +61,6 @@ def read_config(infile):
 			raise ValueError('Bad section name: ' + op)
 	return(datasets, analyses, renders)
 
-def parse_boolean(value):
-	"""parses an incoming config value as boolean"""
-	true_values = ('true', '1', 'yes', 'y', 'on')
-	false_values = ('false', '0', 'no', 'n', 'off')
-
-	value = value.lower()
-	if value in true_values:
-		return True
-	elif value in false_values:
-		return False
-	else:
-		raise ValueError(f"Cannot convert {value} to a boolean.")
  
 def parse_channels(value):
 	"""parses channels: comma separated string values, which will be forced to lowercase and removed of spaces"""

@@ -16,6 +16,9 @@ def drone2report(infile):
 		print('[ANALYSIS]', a.to_string())
 		for d in datasets:
 			print(' - [DATASET]', d.to_string())
+			if d.skip:
+				print('marked to be skipped')
+				continue
 			a.run(d)
 
 	print('\n=========================== RENDERING ============================')
