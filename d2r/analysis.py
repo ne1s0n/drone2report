@@ -44,7 +44,7 @@ class Analysis:
 		resized_ds = gdal.Translate('', dataset.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
 		raster_output = resized_ds.ReadAsArray()
 		
-		#if onle one channel: let's replicate it so that it can go through the same cycles as the multichannel case
+		#if only one channel: let's replicate it so that it can go through the same cycles as the multichannel case
 		if len(dataset.channels) == 1:
 			newraster = np.zeros((3, raster_output.shape[0], raster_output.shape[1]))
 			newraster[0, :, :] = raster_output
@@ -83,7 +83,7 @@ class Analysis:
 			for i in range(len(coords)):
 				(coords2[i,0], coords2[i,1]) = d2r.dataset.transform_coords(resized_ds, point=(coords[i][0], coords[i][1]), source='geo')
 			
-			#drawing the polygon
+			#drawing the polygon in white
 			rr, cc = polygon(coords2[:,1], coords2[:,0], raster_output.shape)
 			raster_output[rr, cc, :] = 255
 		
