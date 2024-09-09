@@ -11,7 +11,7 @@ from osgeo import osr
 
 class Dataset:
 	def __init__(self, title, body):
-		self.name = title
+		self.title = title
 		
 		#parsing series, progressive number (if present)
 		pieces = title.split(' ')
@@ -53,7 +53,7 @@ class Dataset:
 		self.__load()
 			
 	def to_string(self):
-		return(self.name + ' (' + self.type + ')') 
+		return(self.title + ' (' + self.type + ')') 
 	def get_meta(self):
 		return(self.meta)
 	def get_config(self):
@@ -64,6 +64,7 @@ class Dataset:
 	
 	def __load(self):
 		"""initializes the dataset structures"""
+		print('\n---------------------------')
 		print('opening image file ' + self.config['orthomosaic_file'])
 		self.ds = gdal.Open(self.config['orthomosaic_file'], gdal.GA_ReadOnly)
 		print("Projection: ", self.ds.GetProjection())  # get projection
@@ -72,7 +73,7 @@ class Dataset:
 		print("Band count:", self.ds.RasterCount)  # number of bands
 		
 		#opening shapes file
-		print('opening image file ' + self.config['shapes_file'])
+		print('opening shape file ' + self.config['shapes_file'])
 		self.shapes = gpd.read_file(self.config['shapes_file'])
 		
 		# let's play it safe and convert the orthomosaic projection to an osr SpatialReference object
@@ -84,7 +85,7 @@ class Dataset:
 
 		# Reproject the shapefile to match the orthomosaic's CRS
 		self.shapes = self.shapes.to_crs(proj4_string)
-	
+		
 	def get_geom_raster(self, polygon_id=None, polygon_field=None, polygon_order=None):
 		"""
 		Returns the raster data for the specified polygon
@@ -162,11 +163,6 @@ class Dataset:
 		col1, row1 = self.transform_coords(point=(x_min, y_min), source='geo')
 		col2, row2 = self.transform_coords(point=(x_max, y_max), source='geo')
 		
-		#sanity check: if any coordinate is negative we are asking for a polygon
-		#outside the limits of the raster
-		if any(x < 0 for x in [col1, row1, col2, row2]):
-			raise ValueError('A polygon is out of the raster limits')
-
 		#define the region of interest in the required form
 		x_size = int(abs(col1 - col2))    # Width of the subset in pixels
 		y_size = int(abs(row1 - row2))    # Height of the subset in pixels
@@ -183,8 +179,18 @@ class Dataset:
 		# Read the specified subset as an array
 		subset_array = self.ds.ReadAsArray(x_offset, y_offset, x_size, y_size)
 		
-		#we expect this to be in the shape: channel, columns, rows.
-		#we check, then move to channel-last format
+		#we expect this to be in the shape: channel, columns, rows. But
+		#if it's a single channel raster is just columns, rows. Let's cover
+		#this case
+		if self.ds.RasterCount == 1:
+			#double check: are we in the correct case?
+			if subset_array.shape != (y_size, x_size):
+				raise ValueError('Unexpected shape, found', subset_array.shape, 'expected', (y_size, x_size))
+			#let's now add an axis, with a single slot
+			subset_array = np.expand_dims(subset_array, axis=0)
+		
+		#we check that we are in the expected case of channel-first
+		#then move to channel-last format
 		if subset_array.shape[0] != self.ds.RasterCount:
 			raise ValueError('Data is not channel-first format')
 		subset_array = np.moveaxis(subset_array, 0, -1)
