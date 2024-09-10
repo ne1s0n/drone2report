@@ -45,7 +45,7 @@ class thumbnail(Analysis):
 		#if more than three channels: focus on the channels specified in the config 
 		if len(dataset.channels) > 3:
 			#parsing the list of requested channels
-			print ('Too many channels, subsetting to the three selected in config file')
+			print ('Too many channels, subsetting to the three selected in config file' + self.config['channels'])
 			channels = d2r.config.parse_channels(self.config['channels'])
 			if len(channels) != 3:
 				raise ValueError('Too many channels in the config file: '+ self.config['channels'])
