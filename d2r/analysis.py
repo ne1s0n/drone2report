@@ -1,98 +1,26 @@
-import os
-import pathlib
-from osgeo import gdal
-import numpy as np
-from PIL import Image
-import d2r.config
-import d2r.dataset
-from skimage.draw import polygon
+import importlib
 
+def analysis_factory(title, config):
+	#importing the module
+	dynamic_module = importlib.import_module('d2r.analyses.' + title)
+	#importing the class
+	dynamic_class = getattr(dynamic_module, title)
+	#instantiating
+	return dynamic_class(title, config)
 
 class Analysis:
 	def __init__(self, title, config):
 		self.title = title
 		self.config = config
 		
-		#the title becomes also the actual function we are going to call, so it's better 
-		#to check if it exists
-		if not callable(getattr(self, title, None)):
-			raise ValueError('Requested unknown analysis: ' + title)
-		
 	def to_string(self):
 		return(self.title)
+		
 	def run(self, dataset):
-		return(getattr(self, self.title)(dataset))
-
-	def thumbnail(self, dataset):
-		#the output path
-		outfile = os.path.join(self.config['outfolder'], 'thumb_' + dataset.title + '.png')
-		path = pathlib.Path(self.config['outfolder'])
-		path.mkdir(parents=True, exist_ok=True)		
-
-		#check if we should do the analysis or not
-		if os.path.isfile(outfile) and self.config.getboolean('skip_if_already_done'):
-			print('skipping. Output file already exists: ' + outfile)
-			return(None)
+		"""this method is ment to be overloaded by the derived subclasses, it's where the actual computation happens"""
+		pass
 		
-		#if we get here, we should create the thumbnail. Compute the output sizes:
-		orig_width, orig_height = dataset.get_raster_size()
-		width = int(self.config['output_width'])
-		height = int(width * (orig_height / orig_width))
-		
-		#resize
-		#resized_ds = gdal.Warp('', dataset.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
-		resized_ds = gdal.Translate('', dataset.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
-		raster_output = resized_ds.ReadAsArray()
-		
-		#if only one channel: let's replicate it so that it can go through the same cycles as the multichannel case
-		if len(dataset.channels) == 1:
-			newraster = np.zeros((3, raster_output.shape[0], raster_output.shape[1]))
-			newraster[0, :, :] = raster_output
-			newraster[1, :, :] = raster_output
-			newraster[2, :, :] = raster_output
-			raster_output = newraster
-
-		#move from channel-first to channel-last
-		raster_output = np.moveaxis(raster_output, 0, -1)
-		
-		#if more than three channels: focus on the channels specified in the config 
-		if len(dataset.channels) > 3:
-			#parsing the list of requested channels
-			print ('Too many channels, subsetting to the three selected in config file')
-			channels = d2r.config.parse_channels(self.config['channels'])
-			if len(channels) != 3:
-				raise ValueError('Too many channels in the config file: '+ self.config['channels'])
-			channels = [dataset.channels.index(x) for x in channels]
-			raster_output = raster_output[:, :, channels]
-		
-		#fix the nodata values
-		raster_output = np.ma.masked_equal(raster_output, int(dataset.config['nodata']))
-		
-		#should we rescale to 0-255 ?
-		if self.config.getboolean('rescale'):
-			mymin = np.min(raster_output)
-			mymax = np.max(raster_output)
-			raster_output = 255 * (raster_output - mymin) / (mymax - mymin)
-
-		#add polygons
-		for i in range(len(dataset.shapes.index)):
-			sh = dataset.shapes.iloc[i,:].geometry
-			#converting the polygon coordinates to pixel coordinates
-			coords = list(sh.exterior.coords)
-			coords2 = np.zeros((len(coords), 2))
-			for i in range(len(coords)):
-				(coords2[i,0], coords2[i,1]) = d2r.dataset.transform_coords(resized_ds, point=(coords[i][0], coords[i][1]), source='geo')
-			
-			#drawing the polygon in white
-			rr, cc = polygon(coords2[:,1], coords2[:,0], raster_output.shape)
-			raster_output[rr, cc, :] = 255
-		
-		#save the thumbnail
-		foo = Image.fromarray(raster_output.astype(np.uint8))
-		foo.save(outfile)
-		
-		return None
-		
-	def indexes(self, dataset):
+class indexes(Analysis):
+	def run(self, dataset):
 		#TODO
 		return None

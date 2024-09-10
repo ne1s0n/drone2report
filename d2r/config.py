@@ -14,7 +14,7 @@ import pprint
 
 from d2r.dataset import Dataset
 from d2r.render import Render
-from d2r.analysis import Analysis
+from d2r.analysis import analysis_factory
 
 def read_config(infile):
 	'''
@@ -52,7 +52,7 @@ def read_config(infile):
 			datasets.append(Dataset(title, config[section]))
 			found = True
 		if op == 'ANALYSIS':
-			analyses.append(Analysis(title, config[section]))
+			analyses.append(analysis_factory(title, config[section]))
 			found = True
 		if op == 'RENDER':
 			renders.append(Render(title, config[section]))
