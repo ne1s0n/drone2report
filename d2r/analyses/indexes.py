@@ -46,6 +46,17 @@ class indexes(Analysis):
 		#saving the results
 		df.to_csv(outfile, index=False)
 
+def NDVI(img, channels):
+	"""Normalized vegetation index, uses red, NIR"""
+	try:
+		red = channels.index('red')
+		NIR = channels.index('nir')
+	except ValueError:
+		#if this clause is activated it means that the requested channel(s) are not available
+		return np.nan
+	#if we get here the index can be applied to the current image
+	return((img[:, :, NIR] - img[:, :, red]) / (img[:, :, NIR] + img[:, :, red])) 
+
 def GLI(img, channels):
 	"""Green leaf index, uses red, green, blue"""
 	try:
@@ -53,6 +64,7 @@ def GLI(img, channels):
 		green = channels.index('green')
 		blue = channels.index('blue')
 	except ValueError:
+		#if this clause is activated it means that the requested channel(s) are not available
 		return np.nan
 	#if we get here the index can be applied to the current image
 	return(2 * img[:, :, green] - img[:, :, red] - img[:, :, blue]) / (2 * img[:, :, green] + img[:, :, red] + img[:, :, blue])   
