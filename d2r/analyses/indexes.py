@@ -20,19 +20,26 @@ class indexes(Analysis):
 		#room for results
 		df = None
 		
+		#the index list
+		index_names = self.config['indexes'].replace(" ", "").split(',')
+		
 		#for each shape in the dataset
 		for i in range(len(dataset.shapes)):
 			rb = dataset.get_geom_raster(polygon_order=i)
+			#if rb is None it means that we have asked for data outside the image
+			
 			if rb is not None:
 				#starting to build the saved dict
 				d = {'polygon' : [i]}
 				
-				#computing an index
-				myindex = GLI(rb, dataset.channels)
-				d['GLI_mean'] = np.mean(myindex)
-				d['GLI_max'] = np.max(myindex)
-				d['GLI_min'] = np.min(myindex)
-				
+				#for each required index
+				for current_index in index_names:
+					current_index_function = globals()[current_index]
+					myindex = current_index_function(rb, dataset.channels)
+					d[current_index + '_mean'] = np.mean(myindex)
+					d[current_index + '_max'] = np.max(myindex)
+					d[current_index + '_min'] = np.min(myindex)
+					
 				#storing the results
 				df = pd.concat([df, pd.DataFrame.from_dict(d)])
 		
@@ -40,10 +47,14 @@ class indexes(Analysis):
 		df.to_csv(outfile, index=False)
 
 def GLI(img, channels):
-	"""Green leaf index"""
-	red = channels.index('red')
-	green = channels.index('green')
-	blue = channels.index('blue')
+	"""Green leaf index, uses red, green, blue"""
+	try:
+		red = channels.index('red')
+		green = channels.index('green')
+		blue = channels.index('blue')
+	except ValueError:
+		return np.nan
+	#if we get here the index can be applied to the current image
 	return(2 * img[:, :, green] - img[:, :, red] - img[:, :, blue]) / (2 * img[:, :, green] + img[:, :, red] + img[:, :, blue])   
 
 def random(img, channels):
