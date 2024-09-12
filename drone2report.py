@@ -27,6 +27,7 @@ def drone2report(infile):
 	for r in renders:
 		print('[RENDER]', r.to_string())
 		r.run()
+		print('')
 
 	#stop
 	return None
