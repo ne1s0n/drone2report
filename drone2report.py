@@ -6,12 +6,12 @@ import pprint
 from d2r.config import read_config
 
 def drone2report(infile):
-	#reading the config in
 	print('========================== DATASET SETUP ===========================')
+	#reading the config in
 	datasets, tasks, renders = read_config(infile)
 	
-	#applying all tasks to all datasets
 	print('\n========================= RUNNING TASKS ==========================')
+	#applying all tasks to all datasets
 	for t in tasks:
 		print('[TASK]', t.to_string())
 		for d in datasets:
@@ -20,10 +20,13 @@ def drone2report(infile):
 				print('marked to be skipped')
 				continue
 			t.run(d)
-		print('\n')
+		print('')
 
 	print('\n=========================== RENDERING ============================')
-	print('TBD')
+	#executing all the renderings
+	for r in renders:
+		print('[RENDER]', r.to_string())
+		r.run()
 
 	#stop
 	return None

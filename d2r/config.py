@@ -13,7 +13,7 @@ import os
 import pprint
 
 from d2r.dataset import dataset_factory
-from d2r.render import Render
+from d2r.render import render_factory
 from d2r.task import task_factory
 
 def read_config(infile):
@@ -56,7 +56,7 @@ def read_config(infile):
 			tasks.append(task_factory(title, config[section]))
 			found = True
 		if op == 'RENDER':
-			renders.append(Render(title, config[section]))
+			renders.append(render_factory(title, config[section]))
 			found = True
 		if not found:
 			raise ValueError('Bad section name: ' + op)
