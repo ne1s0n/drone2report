@@ -14,7 +14,7 @@ import pprint
 
 from d2r.dataset import Dataset
 from d2r.render import Render
-from d2r.analysis import analysis_factory
+from d2r.task import task_factory
 
 def read_config(infile):
 	'''
@@ -33,7 +33,7 @@ def read_config(infile):
 	
 	#prepare the output lists, first level of keys
 	datasets = []
-	analyses = []
+	tasks = []
 	renders = []
 	
 	#loading everything
@@ -51,15 +51,15 @@ def read_config(infile):
 		if op == 'DATA':
 			datasets.append(Dataset(title, config[section]))
 			found = True
-		if op == 'ANALYSIS':
-			analyses.append(analysis_factory(title, config[section]))
+		if op == 'TASK':
+			tasks.append(task_factory(title, config[section]))
 			found = True
 		if op == 'RENDER':
 			renders.append(Render(title, config[section]))
 			found = True
 		if not found:
 			raise ValueError('Bad section name: ' + op)
-	return(datasets, analyses, renders)
+	return(datasets, tasks, renders)
 
  
 def parse_channels(value):

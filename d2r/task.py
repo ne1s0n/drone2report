@@ -1,19 +1,19 @@
 import importlib
 
-def analysis_factory(title, config):
-	"""factory method for dynamically instantiating analysis classes"""
+def task_factory(title, config):
+	"""factory method for dynamically instantiating Task classes"""
 	#importing the module
-	dynamic_module = importlib.import_module('d2r.analyses.' + title)
+	dynamic_module = importlib.import_module('d2r.tasks.' + title)
 	#importing the class
 	dynamic_class = getattr(dynamic_module, title)
 	#instantiating
 	return dynamic_class(title, config)
 
-class Analysis:
+class Task:
 	"""
-	This is the base Analysis class, to be subclassed by actual analyses
+	This is the base task class, to be subclassed by actual implementations of tasks
 	
-	Place your implementations (in the form of a subclass) under dr2/analyses.
+	Place your implementations (in the form of a subclass) under dr2/tasks.
 	Each module (file) will be dynamically loaded. Only the "run" method
 	will be called.
 	"""

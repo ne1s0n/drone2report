@@ -8,18 +8,18 @@ from d2r.config import read_config
 def drone2report(infile):
 	#reading the config in
 	print('========================== DATASET SETUP ===========================')
-	datasets, analyses, renders = read_config(infile)
+	datasets, tasks, renders = read_config(infile)
 	
-	#applying all analyses to all datasets
-	print('\n======================== RUNNING ANALYSES ========================')
-	for a in analyses:
-		print('[ANALYSIS]', a.to_string())
+	#applying all tasks to all datasets
+	print('\n========================= RUNNING TASKS ==========================')
+	for t in tasks:
+		print('[TASK]', t.to_string())
 		for d in datasets:
 			print(' - [DATASET]', d.to_string())
 			if d.skip:
 				print('marked to be skipped')
 				continue
-			a.run(d)
+			t.run(d)
 
 	print('\n=========================== RENDERING ============================')
 	print('TBD')

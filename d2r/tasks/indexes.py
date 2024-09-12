@@ -3,16 +3,16 @@ import pathlib
 import numpy as np
 import pandas as pd
 
-from d2r.analysis import Analysis
+from d2r.task import Task
 
-class indexes(Analysis):
+class indexes(Task):
 	def run(self, dataset):
 		#the output path
 		outfile = os.path.join(self.config['outfolder'], 'indexes_' + dataset.title + '.csv')
 		path = pathlib.Path(self.config['outfolder'])
 		path.mkdir(parents=True, exist_ok=True)		
 
-		#check if we should do the analysis or not
+		#check if we should do the task or not
 		if os.path.isfile(outfile) and self.config.getboolean('skip_if_already_done'):
 			print('skipping. Output file already exists: ' + outfile)
 			return(None)

@@ -5,18 +5,18 @@ import numpy as np
 from PIL import Image
 from skimage.draw import polygon
 
-from d2r.analysis import Analysis
+from d2r.task import Task
 import d2r.config
 import d2r.dataset
 
-class thumbnail(Analysis):
+class thumbnail(Task):
 	def run(self, dataset):
 		#the output path
 		outfile = os.path.join(self.config['outfolder'], 'thumb_' + dataset.title + '.png')
 		path = pathlib.Path(self.config['outfolder'])
 		path.mkdir(parents=True, exist_ok=True)		
 
-		#check if we should do the analysis or not
+		#check if we should do the task or not
 		if os.path.isfile(outfile) and self.config.getboolean('skip_if_already_done'):
 			print('skipping. Output file already exists: ' + outfile)
 			return(None)

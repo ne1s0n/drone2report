@@ -9,6 +9,9 @@ from skimage.draw import polygon
 import geopandas as gpd
 from osgeo import osr
 
+#def dataset_factory():
+	
+
 class Dataset:
 	def __init__(self, title, body):
 		self.title = title
