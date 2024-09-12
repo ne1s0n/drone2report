@@ -84,6 +84,10 @@ class Dataset:
 		return(self.config)
 	def get_channels(self):
 		return self.channels
+	def get_title(self):
+		return self.title
+	def get_type(self):
+		return self.type
 	def get_raster_size(self):
 		return (self.ds.RasterXSize, self.ds.RasterYSize)
 	
@@ -247,7 +251,6 @@ class Dataset:
 		"""returns True if all points of the geometry are pixel-wise inside the image, False otherwise"""
 		#getting pixel-wise limits of the passed geometry
 		x_size, y_size, x_offset, y_offset = self.get_bounding_box_size_and_offset(geom)
-		print('checking', x_size, y_size, x_offset, y_offset, 'against', self.ds.RasterXSize, self.ds.RasterYSize)
 		
 		#checking if all values are inside the raster size
 		return (x_offset >= 0) and (y_offset >= 0) and (x_offset + x_size < self.ds.RasterXSize) and (y_offset + y_size < self.ds.RasterYSize)

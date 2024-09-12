@@ -2,6 +2,7 @@ import os
 import pathlib
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from d2r.task import Task
 
@@ -24,14 +25,21 @@ class indexes(Task):
 		index_names = self.config['indexes'].replace(" ", "").split(',')
 		
 		#for each shape in the dataset
-		for i in range(len(dataset.shapes)):
+		for i in tqdm(range(len(dataset.shapes))):
 			rb = dataset.get_geom_raster(polygon_order=i)
 			#if rb is None it means that we have asked for data outside the image
 			
 			if rb is not None:
 				#starting to build the saved dict
-				d = {'polygon' : [i]}
-				
+				(ortho, shapes) = dataset.get_files()
+				d = {
+					'type' : dataset.get_type(), 
+					'dataset' : dataset.get_title(),
+					'ortho_file' : ortho, 
+					'shapes_file' : shapes,
+					'polygon' : [i]
+				}
+
 				#for each required index
 				for current_index in index_names:
 					current_index_function = globals()[current_index]
