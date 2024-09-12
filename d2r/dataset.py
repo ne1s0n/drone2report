@@ -9,7 +9,8 @@ from skimage.draw import polygon
 import geopandas as gpd
 from osgeo import osr
 
-#def dataset_factory():
+def dataset_factory(title, body):
+	return [Dataset(title, body)]
 	
 
 class Dataset:
@@ -96,6 +97,12 @@ class Dataset:
 		# Reproject the shapefile to match the orthomosaic's CRS
 		self.shapes = self.shapes.to_crs(proj4_string)
 		
+	def get_files(self):
+		"""returns orthomosaic and shapes file names"""
+		ortho = self.config['orthomosaic_file']
+		shapes = self.config['shapes_file']
+		return(ortho, shapes)
+
 	def get_geom_raster(self, polygon_id=None, polygon_field=None, polygon_order=None):
 		"""
 		Returns the raster data for the specified polygon

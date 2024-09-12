@@ -12,7 +12,7 @@ import configparser
 import os
 import pprint
 
-from d2r.dataset import Dataset
+from d2r.dataset import dataset_factory
 from d2r.render import Render
 from d2r.task import task_factory
 
@@ -49,7 +49,8 @@ def read_config(infile):
 		#each section is an instance of an object
 		found = False
 		if op == 'DATA':
-			datasets.append(Dataset(title, config[section]))
+			#the factory here returns a list, even if it's with only one element
+			datasets = datasets + dataset_factory(title, config[section])
 			found = True
 		if op == 'TASK':
 			tasks.append(task_factory(title, config[section]))
