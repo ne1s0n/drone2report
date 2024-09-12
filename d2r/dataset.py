@@ -2,20 +2,39 @@
 #it does not really read the data, but it checks for the required files to be existing
 
 import numpy as np
-import d2r.config
 import warnings
 from osgeo import gdal
+from osgeo import osr
 from skimage.draw import polygon
 import geopandas as gpd
-from osgeo import osr
+import configparser
+
+import os.path
+import d2r.config
+import d2r.misc
 
 def dataset_factory(title, body):
-	return [Dataset(title, body)]
+	if body['type'] == 'tif_multichannel':
+		#either specify a data folder or a single file
+		if os.path.isfile(body['orthomosaic']):
+			#single file specified. Let's just explicitly inform the class constructor
+			return [Dataset(title, body, body['orthomosaic'])]
+		if os.path.isdir(body['orthomosaic']):
+			#for all the tif in the folder let's instantiate a different Dataset object
+			files = d2r.misc.find_case_insensitve(body['orthomosaic'], ['.tif', '.tiff'])
+			res = []
+			for f in files:
+				#instantiating a single dataset object for each single file
+				res.append(Dataset(title, body, f))
+			return(res)
 	
+	#if we get here something went wrong
+	raise ValueError('Unknown type when parsing DATA section ' + title)
 
 class Dataset:
-	def __init__(self, title, body):
+	def __init__(self, title, body, infile):
 		self.title = title
+		self.orthomosaic_file = infile
 		
 		#parsing series, progressive number (if present)
 		pieces = title.split(' ')
@@ -57,7 +76,8 @@ class Dataset:
 		self.__load()
 			
 	def to_string(self):
-		return(self.title + ' (' + self.type + ')') 
+		(ortho, shapes) = self.get_files()
+		return(self.title + ' (' + self.type + ', ' + d2r.misc.get_file_corename(ortho) + ')') 
 	def get_meta(self):
 		return(self.meta)
 	def get_config(self):
@@ -70,8 +90,8 @@ class Dataset:
 	def __load(self):
 		"""initializes the dataset structures"""
 		print('\n---------------------------')
-		print('opening image file ' + self.config['orthomosaic_file'])
-		self.ds = gdal.Open(self.config['orthomosaic_file'], gdal.GA_ReadOnly)
+		print('opening image file ' + self.orthomosaic_file)
+		self.ds = gdal.Open(self.orthomosaic_file, gdal.GA_ReadOnly)
 		print("Projection: ", self.ds.GetProjection())  # get projection
 		print("Columns:", self.ds.RasterXSize)  # number of columns
 		print("Rows:", self.ds.RasterYSize)  # number of rows
@@ -99,7 +119,7 @@ class Dataset:
 		
 	def get_files(self):
 		"""returns orthomosaic and shapes file names"""
-		ortho = self.config['orthomosaic_file']
+		ortho = self.orthomosaic_file
 		shapes = self.config['shapes_file']
 		return(ortho, shapes)
 
