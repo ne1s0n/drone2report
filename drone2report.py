@@ -20,6 +20,7 @@ def drone2report(infile):
 				print('marked to be skipped')
 				continue
 			t.run(d)
+		print('\n')
 
 	print('\n=========================== RENDERING ============================')
 	print('TBD')

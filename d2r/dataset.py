@@ -61,6 +61,8 @@ class Dataset:
 				self.channels = d2r.config.parse_channels(body[key])
 			elif key.lower() == 'type':
 				self.type = body[key]
+			elif key.lower() == 'verbose':
+				self.verbose = body.getboolean(key)
 			else:
 				self.config[key] = body[key]
 		
@@ -158,8 +160,9 @@ class Dataset:
 		
 		#check if the polygon is inside the raster data
 		if not self.is_bounding_box_inside(geom):
-			msg = 'Requested data for a geometry outside the image limits. Returning None\n' + shape.to_string()
-			warnings.warn(msg)
+			if self.verbose:
+				msg = 'Requested data for a geometry outside the image limits. Returning None\n' + shape.to_string()
+				warnings.warn(msg)
 			return None
 		
 		#extract the bounding box for the geometry from the raster dataset

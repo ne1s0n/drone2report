@@ -5,11 +5,14 @@ import pandas as pd
 from tqdm import tqdm
 
 from d2r.task import Task
+import d2r.misc
 
 class indexes(Task):
 	def run(self, dataset):
 		#the output path
-		outfile = os.path.join(self.config['outfolder'], 'indexes_' + dataset.title + '.csv')
+		(ortho, shapes) = dataset.get_files()
+		ortho = d2r.misc.get_file_corename(ortho)
+		outfile = os.path.join(self.config['outfolder'], 'indexes_' + dataset.get_title() + '_' + ortho + '.csv')
 		path = pathlib.Path(self.config['outfolder'])
 		path.mkdir(parents=True, exist_ok=True)		
 

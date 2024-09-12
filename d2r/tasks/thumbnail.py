@@ -15,7 +15,7 @@ class thumbnail(Task):
 		#the output path
 		(ortho, shapes) = dataset.get_files()
 		ortho = d2r.misc.get_file_corename(ortho)
-		outfile = os.path.join(self.config['outfolder'], 'thumb_' + dataset.title + '_' + ortho + '.png')
+		outfile = os.path.join(self.config['outfolder'], 'thumb_' + dataset.get_title() + '_' + ortho + '.png')
 		path = pathlib.Path(self.config['outfolder'])
 		path.mkdir(parents=True, exist_ok=True)		
 
