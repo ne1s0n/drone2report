@@ -138,7 +138,13 @@ class Dataset:
 		shapes = self.config['shapes_file']
 		return(ortho, shapes)
 
-	#def get_geom_meta(self, polygon_id):
+	def get_geom_index(self):
+		"""returns the name of the field in the shape file that should be used as index"""
+		return(self.config['shapes_index'])
+		
+	def get_geom_field(self, polygon_field):
+		"""all the values in the passed column"""
+		return(self.shapes.loc[:, polygon_field])
 
 	def get_geom_raster(self, polygon_id=None, polygon_field=None, polygon_order=None):
 		"""

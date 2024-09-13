@@ -27,9 +27,12 @@ class indexes(Task):
 		#the index list
 		index_names = self.config['indexes'].replace(" ", "").split(',')
 		
+		#the field that is used to index geometries in the shape file
+		field = dataset.get_geom_index()
+		
 		#for each shape in the dataset
-		for i in tqdm(range(len(dataset.shapes))):
-			rb = dataset.get_geom_raster(polygon_order=i)
+		for i in tqdm( dataset.get_geom_field(field)):
+			rb = dataset.get_geom_raster(polygon_field=field, polygon_id=i)
 			#if rb is None it means that we have asked for data outside the image
 			
 			if rb is not None:
@@ -40,7 +43,7 @@ class indexes(Task):
 					'dataset' : dataset.get_title(),
 					'ortho_file' : ortho, 
 					'shapes_file' : shapes,
-					'polygon' : [i]
+					field : [i]
 				}
 
 				#for each required index
