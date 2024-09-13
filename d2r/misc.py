@@ -14,7 +14,7 @@ def find_case_insensitve(dirname, extensions):
 			res.append(fullpath)
 	return(res)
 
-def get_file_corename(filename):
+def get_file_corename_ext(filename):
 	core = os.path.basename(filename)
 	core, ext = os.path.splitext(core)
-	return core
+	return core, ext

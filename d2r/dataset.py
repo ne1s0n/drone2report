@@ -79,7 +79,8 @@ class Dataset:
 			
 	def to_string(self):
 		(ortho, shapes) = self.get_files()
-		return(self.title + ' (' + self.type + ', ' + d2r.misc.get_file_corename(ortho) + ')') 
+		(core, ext) = d2r.misc.get_file_corename_ext(ortho)
+		return(self.title + ' (' + self.type + ', ' + core + ')') 
 	def get_meta(self):
 		return(self.meta)
 	def get_config(self):
