@@ -138,6 +138,8 @@ class Dataset:
 		shapes = self.config['shapes_file']
 		return(ortho, shapes)
 
+	#def get_geom_meta(self, polygon_id):
+
 	def get_geom_raster(self, polygon_id=None, polygon_field=None, polygon_order=None):
 		"""
 		Returns the raster data for the specified polygon
@@ -161,12 +163,12 @@ class Dataset:
 			shape = self.shapes.loc[self.shapes[polygon_field] == polygon_id]
 			#sanity check: did we select just one row?
 			if len(shape.index) != 1:
-				raise ValueError('The choice of polygon_field + polygon_id selects either zero or too many polygons:', polygon_field, polygon_id)
-			geom = shape.geometry
+				raise ValueError('The choice of polygon_field + polygon_id selects either zero or too many polygons: ' + str(polygon_field) + ' = ' + str(polygon_id))
+			geom = shape.iloc[0,:].geometry
 		if (polygon_order is not None):
 			shape = self.shapes.iloc[polygon_order, :]
 			geom = shape.geometry
-		
+
 		#check if the polygon is inside the raster data
 		if not self.is_bounding_box_inside(geom):
 			if self.verbose:
