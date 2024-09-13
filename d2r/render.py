@@ -1,4 +1,5 @@
 import importlib
+import os
 
 def render_factory(title, config):
 	"""factory method for dynamically instantiating Render classes"""
@@ -20,6 +21,7 @@ class Render:
 	def __init__(self, title, config):
 		self.title = title
 		self.config = config
+		
 		
 	def to_string(self):
 		return(self.title)
