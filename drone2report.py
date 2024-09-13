@@ -27,15 +27,6 @@ def drone2report(infile):
 		print('')
 
 	#stop
-	
-	
-	print('you should use: ' + datasets[0].get_geom_index())
-	print(datasets[0].shapes)
-	a = datasets[0].get_geom_field('gid')
-	print(a)
-	print(a[0])
-	print(type(a))
-	
 	return None
 	
 	#saving a rastered block, for reference
