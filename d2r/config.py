@@ -49,7 +49,7 @@ def read_config(infile):
 		#each section is an instance of an object
 		found = False
 		if op == 'DATA':
-			#the factory here returns a list, even if it's with only one element
+			#the factory here returns a list, even if it's with only one element, or empty
 			datasets = datasets + dataset_factory(title, config[section])
 			found = True
 		if op == 'TASK':
@@ -60,6 +60,9 @@ def read_config(infile):
 			found = True
 		if not found:
 			raise ValueError('Bad section name: ' + op)
+	
+	
+	
 	return(datasets, tasks, renders)
 
  

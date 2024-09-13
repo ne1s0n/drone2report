@@ -10,19 +10,16 @@ def drone2report(infile):
 	#reading the config in
 	datasets, tasks, renders = read_config(infile)
 	
-	print('\n========================= RUNNING TASKS ==========================')
+	print('\n========================== RUNNING TASKS ===========================')
 	#applying all tasks to all datasets
 	for t in tasks:
 		print('[TASK]', t.to_string())
 		for d in datasets:
 			print(' - [DATASET]', d.to_string())
-			if d.skip:
-				print('marked to be skipped')
-				continue
 			t.run(d)
 		print('')
 
-	print('\n=========================== RENDERING ============================')
+	print('\n============================ RENDERING =============================')
 	#executing all the renderings
 	for r in renders:
 		print('[RENDER]', r.to_string())
