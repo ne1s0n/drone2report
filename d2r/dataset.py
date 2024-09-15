@@ -66,7 +66,7 @@ class Dataset:
 			elif key.lower() == 'skip':
 				self.skip = config.getboolean(key)
 			elif key.lower() == 'channels':
-				self.channels = d2r.config.parse_channels(config[key])
+				self.channels = d2r.misc.parse_channels(config[key])
 			elif key.lower() == 'type':
 				self.type = config[key]
 			elif key.lower() == 'verbose':

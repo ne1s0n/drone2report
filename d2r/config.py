@@ -62,8 +62,3 @@ def read_config(infile):
 			raise ValueError('Bad section name: ' + op)
 	
 	return(datasets, tasks, renders)
-
- 
-def parse_channels(value):
-	"""parses channels: comma separated string values, which will be forced to lowercase and removed of spaces"""
-	return value.lower().replace(" ", "").split(',')

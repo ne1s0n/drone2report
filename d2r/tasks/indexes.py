@@ -17,7 +17,7 @@ class indexes(Task):
 		path.mkdir(parents=True, exist_ok=True)		
 
 		#check if we should do the task or not
-		if os.path.isfile(outfile) and self.config.getboolean('skip_if_already_done'):
+		if os.path.isfile(outfile) and self.config['skip_if_already_done']:
 			print('skipping. Output file already exists: ' + outfile)
 			return(None)
 
@@ -59,6 +59,13 @@ class indexes(Task):
 		
 		#saving the results
 		df.to_csv(outfile, index=False)
+		
+	def parse_config(self, config):
+		"""parsing index-specific config parameters"""
+		res = super().parse_config(config)
+		#no specific parsing required so far
+		return(res)
+
 
 def NDVI(img, channels):
 	"""Normalized vegetation index, uses red, NIR"""
