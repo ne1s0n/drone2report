@@ -2,12 +2,15 @@ import importlib
 
 def task_factory(title, config):
 	"""factory method for dynamically instantiating Task classes"""
+	if config.getboolean('skip'):
+		#just skipping this task
+		return []
 	#importing the module
 	dynamic_module = importlib.import_module('d2r.tasks.' + title)
 	#importing the class
 	dynamic_class = getattr(dynamic_module, title)
 	#instantiating
-	return dynamic_class(title, config)
+	return [dynamic_class(title, config)]
 
 class Task:
 	"""

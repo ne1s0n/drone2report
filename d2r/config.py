@@ -46,22 +46,20 @@ def read_config(infile):
 		op = pieces[0]
 		title = " ".join(pieces[1:])
 		
-		#each section is an instance of an object
+		#each section is an instance of an object. Factory methods return
+		#always a list, which could be empty or contain more than one object
 		found = False
 		if op == 'DATA':
-			#the factory here returns a list, even if it's with only one element, or empty
 			datasets = datasets + dataset_factory(title, config[section])
 			found = True
 		if op == 'TASK':
-			tasks.append(task_factory(title, config[section]))
+			tasks = tasks + task_factory(title, config[section])
 			found = True
 		if op == 'RENDER':
-			renders.append(render_factory(title, config[section]))
+			renders = renders + render_factory(title, config[section])
 			found = True
 		if not found:
 			raise ValueError('Bad section name: ' + op)
-	
-	
 	
 	return(datasets, tasks, renders)
 
