@@ -29,31 +29,28 @@ class thumbnail(Task):
 		width = int(self.config['output_width'])
 		height = int(width * (orig_height / orig_width))
 		
-		#resize
-		#resized_ds = gdal.Warp('', dataset.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
+		#resize, prepare room for output
 		resized_ds = gdal.Translate('', dataset.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
-		raster_output = resized_ds.ReadAsArray()
+		raster_output = np.zeros((3, height, width))
 		
-		#if only one channel: let's replicate it so that it can go through the same cycles as the multichannel case
+		#depending on the number of channels
 		if len(dataset.channels) == 1:
-			newraster = np.zeros((3, raster_output.shape[0], raster_output.shape[1]))
-			newraster[0, :, :] = raster_output
-			newraster[1, :, :] = raster_output
-			newraster[2, :, :] = raster_output
-			raster_output = newraster
-
-		#move from channel-first to channel-last
-		raster_output = np.moveaxis(raster_output, 0, -1)
-		
-		#if more than three channels: focus on the channels specified in the config 
-		if len(dataset.channels) > 3:
-			#parsing the list of requested channels
-			print ('Too many channels, subsetting to the three selected in config file: ' + self.config['channels'])
+			#if only one channel: let's replicate it so that it can go through the same cycles as the multichannel case
+			raster_output[0, :, :] = resized_ds.ReadAsArray()
+			raster_output[1, :, :] = resized_ds.ReadAsArray()
+			raster_output[2, :, :] = resized_ds.ReadAsArray()
+		else:
+			#we output only the 3 channels specified in the config section
 			channels = d2r.config.parse_channels(self.config['channels'])
 			if len(channels) != 3:
 				raise ValueError('Too many channels in the config file: '+ self.config['channels'])
 			channels = [dataset.channels.index(x) for x in channels]
-			raster_output = raster_output[:, :, channels]
+			raster_output[0, :, :] = resized_ds.GetRasterBand(channels[0] + 1).ReadAsArray()
+			raster_output[1, :, :] = resized_ds.GetRasterBand(channels[1] + 1).ReadAsArray()
+			raster_output[2, :, :] = resized_ds.GetRasterBand(channels[2] + 1).ReadAsArray()
+
+		#move from channel-first to channel-last
+		raster_output = np.moveaxis(raster_output, 0, -1)
 		
 		#fix the nodata values
 		raster_output = np.ma.masked_equal(raster_output, int(dataset.config['nodata']))

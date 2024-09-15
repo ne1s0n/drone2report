@@ -21,7 +21,7 @@ def dataset_factory(title, body):
 	if body['type'] == 'tif_multichannel':
 		#sanity
 		if not os.path.exists(body['orthomosaic']):
-			warnings.warn('Section ' + title + 'contains non-existing orthomosaic path ' + body['orthomosaic'])
+			warnings.warn('Section ' + title + ' contains non-existing orthomosaic path ' + body['orthomosaic'])
 			return []
 		#either specify a data folder or a single file
 		if os.path.isfile(body['orthomosaic']):
