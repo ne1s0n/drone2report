@@ -13,34 +13,34 @@ import os.path
 import d2r.config
 import d2r.misc
 
-def dataset_factory(title, body):
-	if body.getboolean('skip'):
+def dataset_factory(title, config):
+	if config.getboolean('skip'):
 		#just skipping this dataset
 		return []
 	
-	if body['type'] == 'tif_multichannel':
+	if config['type'] == 'tif_multichannel':
 		#sanity
-		if not os.path.exists(body['orthomosaic']):
-			warnings.warn('Section ' + title + ' contains non-existing orthomosaic path ' + body['orthomosaic'])
+		if not os.path.exists(config['orthomosaic']):
+			warnings.warn('Section ' + title + ' contains non-existing orthomosaic path ' + config['orthomosaic'])
 			return []
 		#either specify a data folder or a single file
-		if os.path.isfile(body['orthomosaic']):
+		if os.path.isfile(config['orthomosaic']):
 			#single file specified. Let's just explicitly inform the class constructor
-			return [Dataset(title, body, body['orthomosaic'])]
-		if os.path.isdir(body['orthomosaic']):
+			return [Dataset(title, config, config['orthomosaic'])]
+		if os.path.isdir(config['orthomosaic']):
 			#for all the tif in the folder let's instantiate a different Dataset object
-			files = d2r.misc.find_case_insensitve(body['orthomosaic'], ['.tif', '.tiff'])
+			files = d2r.misc.find_case_insensitve(config['orthomosaic'], ['.tif', '.tiff'])
 			res = []
 			for f in files:
 				#instantiating a single dataset object for each single file
-				res.append(Dataset(title, body, f))
+				res.append(Dataset(title, config, f))
 			return(res)
 	
 	#if we get here something went wrong
-	raise ValueError('Unknown type "' + body['type'] + '" found when parsing DATA section ' + title)
+	raise ValueError('Unknown type "' + config['type'] + '" found when parsing DATA section ' + title)
 
 class Dataset:
-	def __init__(self, title, body, infile):
+	def __init__(self, title, config, infile):
 		self.title = title
 		self.orthomosaic_file = infile
 		
@@ -58,21 +58,21 @@ class Dataset:
 		self.skip = None
 		self.meta = {}
 		self.config = {}
-		for key in body:
+		for key in config:
 			if key.lower().startswith('meta_'):
-				self.meta[key[5:]] = body[key]
+				self.meta[key[5:]] = config[key]
 			elif key.lower() == 'type':
-				self.type = body[key]
+				self.type = config[key]
 			elif key.lower() == 'skip':
-				self.skip = body.getboolean(key)
+				self.skip = config.getboolean(key)
 			elif key.lower() == 'channels':
-				self.channels = d2r.config.parse_channels(body[key])
+				self.channels = d2r.config.parse_channels(config[key])
 			elif key.lower() == 'type':
-				self.type = body[key]
+				self.type = config[key]
 			elif key.lower() == 'verbose':
-				self.verbose = body.getboolean(key)
+				self.verbose = config.getboolean(key)
 			else:
-				self.config[key] = body[key]
+				self.config[key] = config[key]
 		
 		#if we reach the end of the parsing and no type was specified, we have a problem
 		if self.type is None:
