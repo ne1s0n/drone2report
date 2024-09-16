@@ -52,8 +52,12 @@ class thumbnail(Task):
 		#move from channel-first to channel-last
 		raster_output = np.moveaxis(raster_output, 0, -1)
 		
-		#fix the nodata values
-		raster_output = np.ma.masked_equal(raster_output, dataset.config['nodata'])
+		#fix the nodata value, if present
+		if dataset.get_nodata_value() is not None:
+			raster_output = np.ma.masked_equal(raster_output, dataset.get_nodata_value())
+		
+		#getting rid of invalid values
+		raster_output = np.ma.masked_invalid(raster_output)
 		
 		#should we rescale to 0-255 ?
 		if self.config['rescale']:

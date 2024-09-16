@@ -102,7 +102,6 @@ class Dataset:
 	def get_raster_size(self):
 		return (self.ds.RasterXSize, self.ds.RasterYSize)
 	def get_nodata_value(self):
-		"""it's an array"""
 		return self.nodata
 	
 	def __load(self):
@@ -116,12 +115,35 @@ class Dataset:
 		print("Band count:", self.ds.RasterCount)  # number of bands
 		
 		#reading the nodata values
-		self.nodata = []
-		for i in range(self.ds.RasterCount):  # GDAL bands are 1-indexed
-			band = self.ds.GetRasterBand(i+1)
-			self.nodata.append(band.GetNoDataValue())
-		print('Nodata values:\n - from config: ' + str(self.config['nodata']) + '\n - from data file: ' + str(self.nodata))
-    		
+		nodata = []
+		for i in range(self.ds.RasterCount):  
+			band = self.ds.GetRasterBand(i+1) # GDAL bands are 1-indexed
+			nodata.append(band.GetNoDataValue())
+		#checking if there's more than one nodata value 
+		nodata = list(set(nodata))
+		if len(nodata) > 1:
+			raise ValueError('The input image is configured for having different "nodata" values on different bands, not supported: ' + str(nodata))
+		if nodata[0] is None:
+			nodata = None
+		else:
+			nodata = int(nodata[0])
+		
+		#checking if there's already a value from the config, and if there's conflict
+		if 'nodata' in self.config:
+			#if there's a value in the config file, we'll use that one
+			self.nodata = self.config['nodata']
+			#what if the config value is different from the one coming directly from the image?
+			if self.config['nodata'] != nodata:
+				msg = 'Value overwrite for nodata parameter:\n'
+				msg = msg + ' - from config ini file   : ' + str(self.config['nodata']) + '\n'
+				msg = msg + ' - from actual image file : ' + str(nodata) + '\n'
+				msg = msg + 'We will use the config value. To use the image one remove the value from config ini file'
+				print(msg)
+		else:
+			#storing the newfound nodata value from image file
+			self.nodata = nodata
+		print('Value used for nodata pixels: ' + str(self.nodata))
+			
 		#opening shapes file
 		print('opening shape file ' + self.config['shapes_file'])
 		self.shapes = gpd.read_file(self.config['shapes_file'])
