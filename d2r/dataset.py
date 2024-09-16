@@ -53,54 +53,57 @@ class Dataset:
 			self.prog = None
 		
 		#parsing meta, config
-		self.type = None
-		self.channels = None
-		self.skip = None
-		self.meta = {}
-		self.config = {}
-		for key in config:
-			if key.lower().startswith('meta_'):
-				self.meta[key[5:]] = config[key]
-			elif key.lower() == 'type':
-				self.type = config[key]
-			elif key.lower() == 'skip':
-				self.skip = config.getboolean(key)
-			elif key.lower() == 'channels':
-				self.channels = d2r.misc.parse_channels(config[key])
-			elif key.lower() == 'type':
-				self.type = config[key]
-			elif key.lower() == 'verbose':
-				self.verbose = config.getboolean(key)
-			else:
-				self.config[key] = config[key]
-		
-		#if we reach the end of the parsing and no type was specified, we have a problem
-		if self.type is None:
-			raise ValueError('Missing "type" field for dataset: ' + title)
-		if self.skip is None:
-			raise ValueError('Missing "skip" field for dataset: ' + title)
-		if self.channels is None:
-			raise ValueError('Missing "channels" field for dataset: ' + title)
+		(self.config, self.meta) = self.parse_config(config)
 			
 		#we are ready to initialize the data
 		self.__load()
 			
+
+	def parse_config(self, config):
+		"""the basic parsing of the config object, returns two dict (config and meta), all keys to lower case"""
+		res = {}
+		meta = {}
+		for key in config:
+			if key.lower() in ['skip', 'skip_if_already_done', 'verbose']:
+				res[key.lower()] = d2r.misc.parse_boolean(config[key])
+			elif key.lower().startswith('meta_'):
+				meta[key[5:].lower()] = config[key]
+			elif key.lower() == 'channels':
+				res[key.lower()] = d2r.misc.parse_channels(config[key])
+			elif key.lower() == 'nodata':
+				res[key.lower()] = int(config[key])
+			else:
+				res[key.lower()] = config[key]
+				
+		#some fields are required, let's check them
+		if 'type' not in res:
+			raise ValueError('Missing "type" field for dataset: ' + title)
+		if 'skip' not in res:
+			raise ValueError('Missing "skip" field for dataset: ' + title)
+		if 'channels' not in res:
+			raise ValueError('Missing "channels" field for dataset: ' + title)
+
+		return(res, meta)
+
 	def to_string(self):
 		(ortho, shapes) = self.get_files()
 		(core, ext) = d2r.misc.get_file_corename_ext(ortho)
-		return(self.title + ' (' + self.type + ', ' + core + ')') 
+		return(self.title + ' (' + self.config['type'] + ', ' + core + ')') 
 	def get_meta(self):
 		return(self.meta)
 	def get_config(self):
 		return(self.config)
 	def get_channels(self):
-		return self.channels
+		return self.config['channels']
 	def get_title(self):
 		return self.title
 	def get_type(self):
-		return self.type
+		return self.config['type']
 	def get_raster_size(self):
 		return (self.ds.RasterXSize, self.ds.RasterYSize)
+	def get_nodata_value(self):
+		"""it's an array"""
+		return self.nodata
 	
 	def __load(self):
 		"""initializes the dataset structures"""
@@ -117,10 +120,12 @@ class Dataset:
 		for i in range(self.ds.RasterCount):  # GDAL bands are 1-indexed
 			band = self.ds.GetRasterBand(i+1)
 			self.nodata.append(band.GetNoDataValue())
+		print('Nodata values:\n - from config: ' + str(self.config['nodata']) + '\n - from data file: ' + str(self.nodata))
     		
 		#opening shapes file
 		print('opening shape file ' + self.config['shapes_file'])
 		self.shapes = gpd.read_file(self.config['shapes_file'])
+		print('- number of ROIs: ' + str(len(self.shapes.index)))
 		
 		# let's play it safe and convert the orthomosaic projection to an osr SpatialReference object
 		spatial_ref = osr.SpatialReference()
@@ -177,7 +182,7 @@ class Dataset:
 
 		#check if the polygon is inside the raster data
 		if not self.is_bounding_box_inside(geom):
-			if self.verbose:
+			if self.config['verbose']:
 				msg = 'Requested data for a geometry outside the image limits. Returning None\n' + shape.to_string()
 				warnings.warn(msg)
 			return None
@@ -274,7 +279,7 @@ class Dataset:
 		
 		#checking if all values are inside the raster size
 		return (x_offset >= 0) and (y_offset >= 0) and (x_offset + x_size < self.ds.RasterXSize) and (y_offset + y_size < self.ds.RasterYSize)
-		
+
 def transform_coords(ds, point, source):
 	"""
 	Transforms the coordinates of a point between georeferenced and pixel
@@ -284,7 +289,6 @@ def transform_coords(ds, point, source):
 	from georeferenced to pixel if 'source' is equal to 'geo', or from pixel
 	to georeferenced if 'source' is equal to 'pix'. For any other value an
 	error will be raised.
-	If the parameter 'pixel_relative' is False (the default) the origin 
 	"""
 	forward_transform = ds.GetGeoTransform()
 	reverse_transform = gdal.InvGeoTransform(forward_transform)

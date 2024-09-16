@@ -34,7 +34,7 @@ class thumbnail(Task):
 		raster_output = np.zeros((3, height, width))
 		
 		#depending on the number of channels
-		if len(dataset.channels) == 1:
+		if len(dataset.get_channels()) == 1:
 			#if only one channel: let's replicate it so that it can go through the same cycles as the multichannel case
 			raster_output[0, :, :] = resized_ds.ReadAsArray()
 			raster_output[1, :, :] = resized_ds.ReadAsArray()
@@ -44,7 +44,7 @@ class thumbnail(Task):
 			channels = self.config['channels']
 			if len(self.config['channels']) != 3:
 				raise ValueError('Too many channels in the config file: '+ self.config['channels'])
-			channels = [dataset.channels.index(x) for x in self.config['channels']]
+			channels = [dataset.get_channels().index(x) for x in self.config['channels']]
 			raster_output[0, :, :] = resized_ds.GetRasterBand(channels[0] + 1).ReadAsArray()
 			raster_output[1, :, :] = resized_ds.GetRasterBand(channels[1] + 1).ReadAsArray()
 			raster_output[2, :, :] = resized_ds.GetRasterBand(channels[2] + 1).ReadAsArray()
@@ -53,7 +53,7 @@ class thumbnail(Task):
 		raster_output = np.moveaxis(raster_output, 0, -1)
 		
 		#fix the nodata values
-		raster_output = np.ma.masked_equal(raster_output, int(dataset.config['nodata']))
+		raster_output = np.ma.masked_equal(raster_output, dataset.config['nodata'])
 		
 		#should we rescale to 0-255 ?
 		if self.config['rescale']:

@@ -49,7 +49,7 @@ class indexes(Task):
 				#for each required index
 				for current_index in index_names:
 					current_index_function = globals()[current_index]
-					myindex = current_index_function(rb, dataset.channels)
+					myindex = current_index_function(rb, dataset.get_channels())
 					d[current_index + '_mean'] = np.mean(myindex)
 					d[current_index + '_max'] = np.max(myindex)
 					d[current_index + '_min'] = np.min(myindex)
