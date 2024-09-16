@@ -68,6 +68,13 @@ class thumbnail(Task):
 		#add polygons
 		for i in range(len(dataset.shapes.index)):
 			sh = dataset.shapes.iloc[i,:].geometry
+			#check: is this polygon-like?
+			if not hasattr(sh, 'exterior'):
+				if self.config['verbose']:
+					print('Found that geometry number ' + str(i) + ' is not polygon-like, type: ' + str(type(sh)))
+				#if it's not polygon-like we cannot draw it
+				continue
+			
 			#converting the polygon coordinates to pixel coordinates
 			coords = list(sh.exterior.coords)
 			coords2 = np.zeros((len(coords), 2))
@@ -82,6 +89,7 @@ class thumbnail(Task):
 		foo = Image.fromarray(raster_output.astype(np.uint8))
 		foo.save(outfile)
 		
+		#and we are done
 		return None
 
 	def parse_config(self, config):
