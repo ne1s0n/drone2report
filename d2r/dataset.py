@@ -77,11 +77,11 @@ class Dataset:
 				
 		#some fields are required, let's check them
 		if 'type' not in res:
-			raise ValueError('Missing "type" field for dataset: ' + title)
+			raise ValueError('Missing "type" field for dataset: ' + self.title)
 		if 'skip' not in res:
-			raise ValueError('Missing "skip" field for dataset: ' + title)
+			raise ValueError('Missing "skip" field for dataset: ' + self.title)
 		if 'channels' not in res:
-			raise ValueError('Missing "channels" field for dataset: ' + title)
+			raise ValueError('Missing "channels" field for dataset: ' + self.title)
 
 		return(res, meta)
 
@@ -107,6 +107,7 @@ class Dataset:
 	def __load(self):
 		"""initializes the dataset structures"""
 		print('\n---------------------------')
+		print('Dataset ' + self.title)
 		print('opening image file ' + self.orthomosaic_file)
 		self.ds = gdal.Open(self.orthomosaic_file, gdal.GA_ReadOnly)
 		print("Projection: ", self.ds.GetProjection())  # get projection
