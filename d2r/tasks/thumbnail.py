@@ -3,7 +3,7 @@ import pathlib
 from osgeo import gdal
 import numpy as np
 from PIL import Image
-from skimage.draw import polygon
+from skimage.draw import polygon_perimeter
 
 from d2r.task import Task
 import d2r.config
@@ -31,7 +31,7 @@ class thumbnail(Task):
 		
 		#resize, prepare room for output
 		resized_ds = gdal.Translate('', dataset.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
-		raster_output = np.zeros((3, height, width))
+		raster_output = 255 * np.ones((3, height, width))
 		
 		#depending on the number of channels
 		if len(dataset.get_channels()) == 1:
@@ -75,8 +75,8 @@ class thumbnail(Task):
 				(coords2[i,0], coords2[i,1]) = d2r.dataset.transform_coords(resized_ds, point=(coords[i][0], coords[i][1]), source='geo')
 			
 			#drawing the polygon in white
-			rr, cc = polygon(coords2[:,1], coords2[:,0], raster_output.shape)
-			raster_output[rr, cc, :] = 255
+			rr, cc = polygon_perimeter(coords2[:,1], coords2[:,0], raster_output.shape)
+			raster_output[rr, cc, :] = (255, 0, 0)
 		
 		#save the thumbnail
 		foo = Image.fromarray(raster_output.astype(np.uint8))
