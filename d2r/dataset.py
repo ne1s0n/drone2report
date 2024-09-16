@@ -115,6 +115,12 @@ class Dataset:
 		print("Rows:", self.ds.RasterYSize)  # number of rows
 		print("Band count:", self.ds.RasterCount)  # number of bands
 		
+		#check on band names
+		if len(self.config['channels']) != self.ds.RasterCount:
+			raise ValueError('Image has ' + str(self.ds.RasterCount) + ' bands but config specifies ' + 
+				str(len(self.config['channels'])) + ' of them')
+		print("Band names:", self.config['channels']) 
+		
 		#reading the nodata values
 		nodata = []
 		for i in range(self.ds.RasterCount):  
