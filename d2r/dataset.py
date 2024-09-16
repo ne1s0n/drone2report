@@ -154,7 +154,7 @@ class Dataset:
 		#opening shapes file
 		print('opening shape file ' + self.config['shapes_file'])
 		self.shapes = gpd.read_file(self.config['shapes_file'])
-		print('- number of ROIs: ' + str(len(self.shapes.index)))
+		print('- found ' + str(len(self.shapes.index)) + ' ROIs with fields ' + str(list(self.shapes)))
 		
 		# let's play it safe and convert the orthomosaic projection to an osr SpatialReference object
 		spatial_ref = osr.SpatialReference()
