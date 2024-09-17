@@ -33,11 +33,9 @@ class Task:
 		pass
 	
 	def parse_config(self, config):
-		"""the basic parsing of the config object, returns a dict, all keys to lower case"""
-		res = {}
-		for key in config:
-			if key.lower() in ['skip', 'skip_if_already_done']:
-				res[key.lower()] = d2r.misc.parse_boolean(config[key])
-			else:
-				res[key.lower()] = config[key]
-		return(res)
+		"""the basic parsing of the config for task object, returns a dict, all keys to lower case"""
+		parsed_config = d2r.misc.parse_config(config)
+		#at this point the config object is a dict. If any specific parsing
+		#should happen, it will happen here. Subclasses should invoke
+		#this method via super().parse_config(config)
+		return(parsed_config)

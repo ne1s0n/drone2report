@@ -61,21 +61,24 @@ class Dataset:
 
 	def parse_config(self, config):
 		"""the basic parsing of the config object, returns two dict (config and meta), all keys to lower case"""
+		#let's start with the basic parsing
+		config = d2r.misc.parse_config(config)
+		
+		#at this point the config is a dict and we can proceed with the
+		#dataset-specific parsing
 		res = {}
 		meta = {}
 		for key in config:
-			if key.lower() in ['skip', 'skip_if_already_done', 'verbose']:
-				res[key.lower()] = d2r.misc.parse_boolean(config[key])
-			elif key.lower().startswith('meta_'):
-				meta[key[5:].lower()] = config[key]
-			elif key.lower() == 'channels':
-				res[key.lower()] = d2r.misc.parse_channels(config[key])
-			elif key.lower() == 'nodata':
-				res[key.lower()] = int(config[key])
+			if key.startswith('meta_'):
+				meta[key[5:]] = config[key]
+			elif key == 'channels':
+				res[key] = d2r.misc.parse_channels(config[key])
+			elif key == 'nodata':
+				res[key] = int(config[key])
 			else:
-				res[key.lower()] = config[key]
+				res[key] = config[key]
 				
-		#some fields are required, let's check them
+		#some fields are required, let's check on them
 		if 'type' not in res:
 			raise ValueError('Missing "type" field for dataset: ' + self.title)
 		if 'skip' not in res:
