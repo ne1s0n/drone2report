@@ -66,24 +66,7 @@ class thumbnail(Task):
 			raster_output = 255 * (raster_output - mymin) / (mymax - mymin)
 
 		#add polygons
-		for i in range(len(dataset.shapes.index)):
-			sh = dataset.shapes.iloc[i,:].geometry
-			#check: is this polygon-like?
-			if not hasattr(sh, 'exterior'):
-				if self.config['verbose']:
-					print('Found that geometry number ' + str(i) + ' is not polygon-like, type: ' + str(type(sh)))
-				#if it's not polygon-like we cannot draw it
-				continue
-			
-			#converting the polygon coordinates to pixel coordinates
-			coords = list(sh.exterior.coords)
-			coords2 = np.zeros((len(coords), 2))
-			for i in range(len(coords)):
-				(coords2[i,0], coords2[i,1]) = d2r.dataset.transform_coords(resized_ds, point=(coords[i][0], coords[i][1]), source='geo')
-			
-			#drawing the polygon in white
-			rr, cc = polygon_perimeter(coords2[:,1], coords2[:,0], raster_output.shape)
-			raster_output[rr, cc, :] = (255, 0, 0)
+		self._add_ROI_perimeter(ROIs=dataset.shapes, target_img=resized_ds, raster_current=raster_output)
 		
 		#save the thumbnail
 		foo = Image.fromarray(raster_output.astype(np.uint8))
@@ -103,3 +86,27 @@ class thumbnail(Task):
 			elif key == 'channels':
 				res[key] = d2r.misc.parse_channels(res[key])
 		return(res)
+
+	def _add_ROI_perimeter(self, ROIs, target_img, raster_current):
+		for i in range(len(ROIs.index)):
+			sh = ROIs.iloc[i,:].geometry
+			#check: is this polygon-like?
+			if not hasattr(sh, 'exterior'):
+				if self.config['verbose']:
+					print('Found that geometry number ' + str(i) + ' is not polygon-like, type: ' + str(type(sh)))
+				#if it's not polygon-like we cannot draw it
+				continue
+			
+			#converting the polygon coordinates to pixel coordinates
+			coords = list(sh.exterior.coords)
+			coords2 = np.zeros((len(coords), 2))
+			for i in range(len(coords)):
+				(coords2[i,0], coords2[i,1]) = d2r.dataset.transform_coords(target_img, point=(coords[i][0], coords[i][1]), source='geo')
+			
+			#drawing the polygon in red
+			rr, cc = polygon_perimeter(coords2[:,1], coords2[:,0], raster_current.shape)
+			raster_current[rr, cc, :] = (255, 0, 0)
+
+		
+		
+		
