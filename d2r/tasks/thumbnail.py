@@ -3,7 +3,7 @@ import pathlib
 from osgeo import gdal
 import numpy as np
 from PIL import Image
-from skimage.draw import polygon_perimeter
+import skimage.draw
 
 from d2r.task import Task
 import d2r.config
@@ -104,7 +104,7 @@ class thumbnail(Task):
 				(coords2[i,0], coords2[i,1]) = d2r.dataset.transform_coords(target_img, point=(coords[i][0], coords[i][1]), source='geo')
 			
 			#drawing the polygon in red
-			rr, cc = polygon_perimeter(coords2[:,1], coords2[:,0], raster_current.shape)
+			rr, cc = skimage.draw.polygon_perimeter(coords2[:,1], coords2[:,0], raster_current.shape)
 			raster_current[rr, cc, :] = (255, 0, 0)
 
 		

@@ -1,39 +1,14 @@
 import os
 import pathlib
+import importlib
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
 from d2r.task import Task
 import d2r.misc
-
-def NDVI(img, channels):
-	"""Normalized vegetation index, uses red, NIR"""
-	try:
-		red = channels.index('red')
-		NIR = channels.index('nir')
-	except ValueError:
-		#if this clause is activated it means that the requested channel(s) are not available
-		return np.nan
-	#if we get here the index can be applied to the current image
-	return((img[:, :, NIR] - img[:, :, red]) / (img[:, :, NIR] + img[:, :, red])) 
-
-def GLI(img, channels):
-	"""Green leaf index, uses red, green, blue"""
-	try:
-		red = channels.index('red')
-		green = channels.index('green')
-		blue = channels.index('blue')
-	except ValueError:
-		#if this clause is activated it means that the requested channel(s) are not available
-		return np.nan
-	#if we get here the index can be applied to the current image
-	return(2 * img[:, :, green] - img[:, :, red] - img[:, :, blue]) / (2 * img[:, :, green] + img[:, :, red] + img[:, :, blue])   
-
-def random(img, channels):
-	"""a random value between zero and one"""
-	return(np.random.rand(img.shape[0], img.shape[1]))   
-
+import d2r.tasks.matrix_returning_indexes as mri
+import d2r.tasks.array_returning_indexes  as ari
 
 class indexes(Task):
 	def run(self, dataset):
@@ -59,10 +34,10 @@ class indexes(Task):
 		field = dataset.get_geom_index()
 		
 		#for each shape in the dataset
-		for i in tqdm( dataset.get_geom_field(field)):
+		for i in tqdm(dataset.get_geom_field(field)):
 			rb = dataset.get_geom_raster(polygon_field=field, polygon_id=i)
-			#if rb is None it means that we have asked for data outside the image
 			
+			#if rb is None it means that we have asked for data outside the image
 			if rb is not None:
 				#starting to build the saved dict
 				(ortho, shapes) = dataset.get_files()
@@ -76,11 +51,20 @@ class indexes(Task):
 
 				#for each required index
 				for current_index in index_names:
-					current_index_function = globals()[current_index]
-					myindex = current_index_function(rb, dataset.get_channels())
-					d[current_index + '_mean'] = np.mean(myindex)
-					d[current_index + '_max'] = np.max(myindex)
-					d[current_index + '_min'] = np.min(myindex)
+					#if it's a matrix-returning index, we are going to compute it and
+					#then store some general statistics
+					if hasattr(mri, current_index):
+						current_index_function = getattr(mri, current_index)
+						myindex = current_index_function(rb, dataset.get_channels())
+						d[current_index + '_mean'] = np.mean(myindex)
+						d[current_index + '_max'] = np.max(myindex)
+						d[current_index + '_min'] = np.min(myindex)
+					
+					#if it's an array-returning index, we are going to compute 
+					#it and then just store the info
+					if hasattr(ari, current_index):
+						current_index_function = getattr(ari, current_index)
+						d.update(current_index_function(rb, dataset.get_channels()))
 					
 				#storing the results
 				df = pd.concat([df, pd.DataFrame.from_dict(d)])
