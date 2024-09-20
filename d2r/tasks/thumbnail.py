@@ -41,10 +41,10 @@ class thumbnail(Task):
 			raster_output[2, :, :] = resized_ds.ReadAsArray()
 		else:
 			#we output only the 3 channels specified in the config section
-			channels = self.config['channels']
-			if len(self.config['channels']) != 3:
-				raise ValueError('Too many channels in the config file: '+ self.config['channels'])
-			channels = [dataset.get_channels().index(x) for x in self.config['channels']]
+			channels = self.config['visible_channels']
+			if len(self.config['visible_channels']) != 3:
+				raise ValueError('Too many channels in the config file: '+ self.config['visible_channels'])
+			channels = [dataset.get_channels().index(x) for x in self.config['visible_channels']]
 			raster_output[0, :, :] = resized_ds.GetRasterBand(channels[0] + 1).ReadAsArray()
 			raster_output[1, :, :] = resized_ds.GetRasterBand(channels[1] + 1).ReadAsArray()
 			raster_output[2, :, :] = resized_ds.GetRasterBand(channels[2] + 1).ReadAsArray()
@@ -60,7 +60,7 @@ class thumbnail(Task):
 		raster_output = np.ma.masked_invalid(raster_output)
 		
 		#should we rescale to 0-255 ?
-		if self.config['rescale']:
+		if self.config['rescale_to_255']:
 			mymin = np.min(raster_output)
 			mymax = np.max(raster_output)
 			raster_output = 255 * (raster_output - mymin) / (mymax - mymin)
@@ -81,9 +81,9 @@ class thumbnail(Task):
 		for key in res:
 			if key == 'output_width':
 				res[key] = int(res[key])
-			elif key == 'rescale':
+			elif key == 'rescale_to_255':
 				res[key] = d2r.misc.parse_boolean(res[key])
-			elif key == 'channels':
+			elif key == 'visible_channels':
 				res[key] = d2r.misc.parse_channels(res[key])
 		return(res)
 
