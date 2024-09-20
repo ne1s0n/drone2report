@@ -35,7 +35,7 @@ class indexes(Task):
 		
 		#for each shape in the dataset
 		for i in tqdm(dataset.get_geom_field(field)):
-			rb = dataset.get_geom_raster(polygon_field=field, polygon_id=i)
+			rb = dataset.get_geom_raster(polygon_field=field, polygon_id=i, normalize_if_possible=True)
 			
 			#if rb is None it means that we have asked for data outside the image
 			if rb is not None:

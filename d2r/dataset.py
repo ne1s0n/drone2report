@@ -189,7 +189,7 @@ class Dataset:
 		"""all the values in the passed column"""
 		return(self.shapes.loc[:, polygon_field])
 
-	def get_geom_raster(self, polygon_id=None, polygon_field=None, polygon_order=None):
+	def get_geom_raster(self, polygon_id=None, polygon_field=None, polygon_order=None, normalize_if_possible=False):
 		"""
 		Returns the raster data for the specified polygon
 		
@@ -201,6 +201,11 @@ class Dataset:
 		
 		Note that the two above options are incompatible, if both or none are specified an
 		error is raised. 
+		
+		If "normalize_if_possible" is true, the function will try
+		to divide the data by the max_value parameter before returning it,
+		so to force the range of the output in the [0,1] interval. However,
+		if max_value is not defined, it will silently skip the division
 		"""
 		#interface 
 		if not ((polygon_id is None) ^ (polygon_order is None)):
@@ -234,6 +239,10 @@ class Dataset:
 		
 		#applying the mask
 		raster_box = np.ma.masked_array(raster_box, mask)
+		
+		#should we normalize?
+		if normalize_if_possible and self.config['max_value'] is not None:
+			raster_box = raster_box / self.config['max_value']
 		
 		#and we are done
 		return(raster_box)
