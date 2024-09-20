@@ -65,17 +65,23 @@ class Dataset:
 		config = d2r.misc.parse_config(config)
 		
 		#at this point the config is a dict and we can proceed with the
-		#dataset-specific parsing
+		#dataset-specific parsing. Here are the resulting output
 		res = {}
 		meta = {}
+		
+		#and here we set a default
+		res['max_value'] = None
+		
+		#for each available parameter
 		for key in config:
 			if key.startswith('meta_'):
 				meta[key[5:]] = config[key]
 			elif key == 'channels':
 				res[key] = d2r.misc.parse_channels(config[key])
-			elif key == 'nodata':
+			elif key in ['nodata', 'max_value']:
 				res[key] = int(config[key])
 			else:
+				#everything else is just copied
 				res[key] = config[key]
 				
 		#some fields are required, let's check on them
