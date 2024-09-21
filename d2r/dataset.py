@@ -114,6 +114,14 @@ class Dataset:
 		return self.nodata
 	
 	def get_raster_data(self, selected_channels, output_width = None, rescale_to_255=True, normalize_if_possible=False):
+		"""
+		Returns raster data as a masked np ndarray
+		
+		selected_channels: array of names of channels to be returned
+		output_width   : if passed, the image will be resized to have this width (height is computed to maintain proportions)
+		rescale_to_255 : if True the values will be rescaled to the 0-255 range
+		normalize_if_possible : if True, and if "max_value" has been defined in config, all data will be divided by max_value, so to stay in the 0-1 ramge 
+		"""
 		#taking notes for simplicity of notation
 		width, height = self.get_raster_size()
 
