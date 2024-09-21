@@ -14,8 +14,8 @@ class explore_index_threshold(Task):
 		#I need all the data here, not only the visible channels, for computation
 		raster_data_raw = dataset.get_raster_data(selected_channels = dataset.get_channels(), output_width = self.config['output_width'], rescale_to_255=False, normalize_if_possible=True)
 		
-		#I just need the visible channels here, for output
-		raster_data_visible = dataset.get_raster_data(selected_channels = self.config['visible_channels'], output_width = self.config['output_width'], rescale_to_255=True, normalize_if_possible=False)
+		#I just need the visible channels here, for output	
+		raster_data_visible = dataset.get_raster_data(selected_channels = self.config['visible_channels'], output_width = self.config['output_width'], rescale_to_255=self.config['rescale_to_255'], normalize_if_possible=False)
 
 		#computing the index over all image	
 		index_function = getattr(d2r.tasks.matrix_returning_indexes, self.config['index'])
@@ -58,5 +58,7 @@ class explore_index_threshold(Task):
 				res[key] = d2r.misc.parse_channels(res[key])
 			elif key == 'thresholds':
 				res[key] = [float(x) for x in res[key].split(',')]
+			elif key == 'rescale_to_255':
+				res[key] = d2r.misc.parse_boolean(res[key])
 		
 		return(res)

@@ -24,49 +24,12 @@ class thumbnail(Task):
 			print('skipping. Output file already exists: ' + outfile)
 			return(None)
 		
-		#if we get here, we should create the thumbnail. Compute the output sizes:
-		orig_width, orig_height = dataset.get_raster_size()
-		width = self.config['output_width']
-		height = int(width * (orig_height / orig_width))
-		
-		#resize, prepare room for output
-		resized_ds = gdal.Translate('', dataset.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
-		raster_output = 255 * np.ones((3, height, width))
-		
-		#depending on the number of channels
-		if len(dataset.get_channels()) == 1:
-			#if only one channel: let's replicate it so that it can go through the same cycles as the multichannel case
-			raster_output[0, :, :] = resized_ds.ReadAsArray()
-			raster_output[1, :, :] = resized_ds.ReadAsArray()
-			raster_output[2, :, :] = resized_ds.ReadAsArray()
-		else:
-			#we output only the 3 channels specified in the config section
-			channels = self.config['visible_channels']
-			if len(self.config['visible_channels']) != 3:
-				raise ValueError('Too many channels in the config file: '+ self.config['visible_channels'])
-			channels = [dataset.get_channels().index(x) for x in self.config['visible_channels']]
-			raster_output[0, :, :] = resized_ds.GetRasterBand(channels[0] + 1).ReadAsArray()
-			raster_output[1, :, :] = resized_ds.GetRasterBand(channels[1] + 1).ReadAsArray()
-			raster_output[2, :, :] = resized_ds.GetRasterBand(channels[2] + 1).ReadAsArray()
-
-		#move from channel-first to channel-last
-		raster_output = np.moveaxis(raster_output, 0, -1)
-		
-		#fix the nodata value, if present
-		if dataset.get_nodata_value() is not None:
-			raster_output = np.ma.masked_equal(raster_output, dataset.get_nodata_value())
-		
-		#getting rid of invalid values
-		raster_output = np.ma.masked_invalid(raster_output)
-		
-		#should we rescale to 0-255 ?
-		if self.config['rescale_to_255']:
-			mymin = np.min(raster_output)
-			mymax = np.max(raster_output)
-			raster_output = 255 * (raster_output - mymin) / (mymax - mymin)
-
+		#if we get here, we should create the thumbnail
+		raster_output = dataset.get_raster_data(selected_channels = self.config['visible_channels'], output_width = self.config['output_width'], rescale_to_255=self.config['rescale_to_255'], normalize_if_possible=False)
+	
 		#add polygons
-		self._add_ROI_perimeter(ROIs=dataset.shapes, target_img=resized_ds, raster_current=raster_output)
+		resized_ds = dataset.get_resized_ds(target_width = self.config['output_width'])
+		d2r.misc.draw_ROI_perimeter(ROIs=dataset.shapes, target_img=resized_ds, raster_data=raster_output, verbose = self.config['verbose'])
 		
 		#save the thumbnail
 		foo = Image.fromarray(raster_output.astype(np.uint8))
@@ -86,27 +49,6 @@ class thumbnail(Task):
 			elif key == 'visible_channels':
 				res[key] = d2r.misc.parse_channels(res[key])
 		return(res)
-
-	def _add_ROI_perimeter(self, ROIs, target_img, raster_current):
-		for i in range(len(ROIs.index)):
-			sh = ROIs.iloc[i,:].geometry
-			#check: is this polygon-like?
-			if not hasattr(sh, 'exterior'):
-				if self.config['verbose']:
-					print('Found that geometry number ' + str(i) + ' is not polygon-like, type: ' + str(type(sh)))
-				#if it's not polygon-like we cannot draw it
-				continue
-			
-			#converting the polygon coordinates to pixel coordinates
-			coords = list(sh.exterior.coords)
-			coords2 = np.zeros((len(coords), 2))
-			for i in range(len(coords)):
-				(coords2[i,0], coords2[i,1]) = d2r.dataset.transform_coords(target_img, point=(coords[i][0], coords[i][1]), source='geo')
-			
-			#drawing the polygon in red
-			rr, cc = skimage.draw.polygon_perimeter(coords2[:,1], coords2[:,0], raster_current.shape)
-			raster_current[rr, cc, :] = (255, 0, 0)
-
 		
 		
 		

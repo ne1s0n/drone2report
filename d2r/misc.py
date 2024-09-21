@@ -1,4 +1,7 @@
 import os
+import numpy as np
+import skimage.draw
+import d2r.dataset
 
 def find_case_insensitve(dirname, extensions):
 	"""find all files in passed folder with the passed extension, case insensitive"""
@@ -45,3 +48,22 @@ def parse_config(config):
 			res[key.lower()] = config[key]
 	return(res)
 
+def draw_ROI_perimeter(ROIs, target_img, raster_data, verbose=False):
+	for i in range(len(ROIs.index)):
+		sh = ROIs.iloc[i,:].geometry
+		#check: is this polygon-like?
+		if not hasattr(sh, 'exterior'):
+			if verbose:
+				print('Found that geometry number ' + str(i) + ' is not polygon-like, type: ' + str(type(sh)))
+			#if it's not polygon-like we cannot draw it
+			continue
+		
+		#converting the polygon coordinates to pixel coordinates
+		coords = list(sh.exterior.coords)
+		coords2 = np.zeros((len(coords), 2))
+		for i in range(len(coords)):
+			(coords2[i,0], coords2[i,1]) = d2r.dataset.transform_coords(target_img, point=(coords[i][0], coords[i][1]), source='geo')
+		
+		#drawing the polygon in red
+		rr, cc = skimage.draw.polygon_perimeter(coords2[:,1], coords2[:,0], raster_data.shape)
+		raster_data[rr, cc, :] = (255, 0, 0)

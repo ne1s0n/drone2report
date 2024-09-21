@@ -112,6 +112,21 @@ class Dataset:
 		return (self.ds.RasterXSize, self.ds.RasterYSize)
 	def get_nodata_value(self):
 		return self.nodata
+	def get_resized_ds(self, target_width = None):
+		#taking notes for simplicity of notation
+		width, height = self.get_raster_size()
+
+		#should we rescale?
+		if target_width is not None:
+			height = int(target_width * (height / width))
+			width = target_width
+		
+		#resize
+		resized_ds = gdal.Translate('', self.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
+
+		#done
+		return(resized_ds)
+
 	
 	def get_raster_data(self, selected_channels, output_width = None, rescale_to_255=True, normalize_if_possible=False):
 		"""
@@ -122,17 +137,12 @@ class Dataset:
 		rescale_to_255 : if True the values will be rescaled to the 0-255 range
 		normalize_if_possible : if True, and if "max_value" has been defined in config, all data will be divided by max_value, so to stay in the 0-1 ramge 
 		"""
-		#taking notes for simplicity of notation
-		width, height = self.get_raster_size()
 
-		#should we rescale?
-		if output_width is not None:
-			height = int(output_width * (height / width))
-			width = output_width
-		
-		#resize, prepare room for output
-		resized_ds = gdal.Translate('', self.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
-		raster_output = 255 * np.zeros((len(selected_channels), height, width))
+		#a resized gdal dataset
+		resized_ds = self.get_resized_ds(target_width = output_width)
+
+		#prepare room for output
+		raster_output = np.zeros((len(selected_channels), resized_ds.RasterYSize, output_width))
 		
 		#getting the channels actual indexes
 		channels = [self.get_channels().index(x) for x in selected_channels]
