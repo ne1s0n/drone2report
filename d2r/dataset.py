@@ -113,6 +113,53 @@ class Dataset:
 	def get_nodata_value(self):
 		return self.nodata
 	
+	def get_raster_data(self, selected_channels, output_width = None, rescale_to_255=True, normalize_if_possible=False):
+		#taking notes for simplicity of notation
+		width, height = self.get_raster_size()
+
+		#should we rescale?
+		if output_width is not None:
+			height = int(output_width * (height / width))
+			width = output_width
+		
+		#resize, prepare room for output
+		resized_ds = gdal.Translate('', self.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
+		raster_output = 255 * np.zeros((len(selected_channels), height, width))
+		
+		#getting the channels actual indexes
+		channels = [self.get_channels().index(x) for x in selected_channels]
+		
+		#copying each require channel
+		for i in range(len(channels)):
+			#putting the the channel number i the band number i+1
+			raster_output[i, :, :] = resized_ds.GetRasterBand(channels[i] + 1).ReadAsArray()
+
+			#TODO for single channel images we may be in need to do something like this: 
+			#raster_output[i, :, :] = resized_ds.ReadAsArray()
+
+		#move from channel-first to channel-last
+		raster_output = np.moveaxis(raster_output, 0, -1)
+
+		#fix the nodata value, if present
+		if self.get_nodata_value() is not None:
+			raster_output = np.ma.masked_equal(raster_output, self.get_nodata_value())
+		
+		#getting rid of invalid values
+		raster_output = np.ma.masked_invalid(raster_output)
+
+		#should we normalize?
+		if normalize_if_possible and self.config['max_value'] is not None:
+			raster_output = raster_output / self.config['max_value']
+
+		#should we rescale to 0-255 ?
+		if rescale_to_255:
+			mymin = np.min(raster_output)
+			mymax = np.max(raster_output)
+			raster_output = 255 * (raster_output - mymin) / (mymax - mymin)
+
+		#and we are done
+		return(raster_output)
+	
 	def __load(self):
 		"""initializes the dataset structures"""
 		print('\n---------------------------')
