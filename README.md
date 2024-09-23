@@ -3,6 +3,12 @@ From orthophoto to summary statistics, indexes, and more.
 
 ## Usage
 
+Clone the repository, create the conda enviroment with:
+
+`conda env create --file environment.yml`
+
+then fill an appropriate .ini file and run:
+
 `python3 drone2report.py <your config .ini file>`
 
 The idea is that you *don't* write any python code, but just fill your appropriate .ini file.
