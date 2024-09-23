@@ -3,7 +3,7 @@ import d2r.misc
 
 def task_factory(title, config):
 	"""factory method for dynamically instantiating Task classes"""
-	if config.getboolean('skip'):
+	if not config.getboolean('active'):
 		#just skipping this task
 		return []
 	#importing the module

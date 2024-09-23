@@ -14,7 +14,7 @@ import d2r.config
 import d2r.misc
 
 def dataset_factory(title, config):
-	if config.getboolean('skip'):
+	if not config.getboolean('active'):
 		#just skipping this dataset
 		return []
 	
@@ -87,8 +87,6 @@ class Dataset:
 		#some fields are required, let's check on them
 		if 'type' not in res:
 			raise ValueError('Missing "type" field for dataset: ' + self.title)
-		if 'skip' not in res:
-			raise ValueError('Missing "skip" field for dataset: ' + self.title)
 		if 'channels' not in res:
 			raise ValueError('Missing "channels" field for dataset: ' + self.title)
 

@@ -4,7 +4,7 @@ import d2r.misc
 
 def render_factory(title, config):
 	"""factory method for dynamically instantiating Render classes"""
-	if config.getboolean('skip'):
+	if not config.getboolean('active'):
 		#just skipping this render
 		return []
 	#importing the module

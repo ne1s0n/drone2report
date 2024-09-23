@@ -40,7 +40,7 @@ def parse_config(config):
 	"""the basic parsing of the config object, returns a dict, all keys to lower case"""
 	res = {}
 	for key in config:
-		if key.lower() in ['skip', 'skip_if_already_done', 'verbose']:
+		if key.lower() in ['active', 'skip_if_already_done', 'verbose']:
 			res[key.lower()] = parse_boolean(config[key])
 		elif key.lower() == 'cores':
 			res[key.lower()] = int(config[key])
