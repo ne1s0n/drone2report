@@ -135,8 +135,8 @@ def VARI700(img, channels):
 		return np.nan
 	#if we get here the index can be applied to the current image
 	return(
-		(w700 - 1.7*w660 + 0.7*w470]) /
-		(w700 + 2.3*w660 - 1.3*w470]) 
+		(w700 - 1.7*w660 + 0.7*w470) /
+		(w700 + 2.3*w660 - 1.3*w470) 
 	) 
 
 def VARIrededge(img, channels):
