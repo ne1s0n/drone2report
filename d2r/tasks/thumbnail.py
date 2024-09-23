@@ -13,8 +13,7 @@ class thumbnail(Task):
 		#are all the required channels (from this task config) available
 		#in the current image?
 		if not set(self.config['visible_channels']).issubset(dataset.get_channels()):
-			if self.config['verbose']:
-				print('Skipping: required to create a thumbnail with channels ' + str(self.config['visible_channels']) + ' but the image has ' + str(dataset.get_channels()))
+			print('Skipping: required to create a thumbnail with channels ' + str(self.config['visible_channels']) + ' but the image has ' + str(dataset.get_channels()))
 			return(None)
 		
 		#I need all the data here, not only the visible channels, for computation
