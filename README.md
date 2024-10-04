@@ -30,17 +30,12 @@ The pipeline runs through three steps
 
 This is a joint effort between:
 
-![CREA logo](PR/crea_logo.png "CREA logo"){width=200px}
+[<img src="PR/crea_logo.png" width=200>](https://www.crea.gov.it/)
 
-[CREA-ZA](https://www.crea.gov.it/) (Lodi, Italy) 
+[<img src="PR/NPEC_logo.png" width=200>](https://www.npec.nl/)
 
-and 
-
-![WUR logo](PR/WUR_logo.svg "WUR logo"){width=200px}
-![NPEC logo](PR/NPEC_logo.png "NPEClogo"){width=200px}
-[NPEC](https://www.npec.nl/) (Wageningen, Netherlands)
 
 The development has also been sponsored by the [Polyploidbreeding project](https://polyploidbreeding.ibba.cnr.it/) (PRIN 2022, Settore LS2)
-![polyploidbreeding logo](PR/polyploidbreeding_logo.png "polyploidbreeding logo"){width=200px}
 
-![EU logo](PR/EU_logo.jpg "EU logo"){width=200px}
+[<img src="PR/polyploidbreeding_logo.png" width=200>](https://polyploidbreeding.ibba.cnr.it/)
+<img src="PR/EU_logo.jpg">
