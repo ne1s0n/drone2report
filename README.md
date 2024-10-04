@@ -30,8 +30,7 @@ The pipeline runs through three steps
 
 This is a joint effort between:
 
-[<img src="PR/crea_logo.png" width=200>](https://www.crea.gov.it/)
-
+[<img src="PR/crea_logo.png" width=350>](https://www.crea.gov.it/)
 [<img src="PR/NPEC_logo.png" width=200>](https://www.npec.nl/)
 
 
