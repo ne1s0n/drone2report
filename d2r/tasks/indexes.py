@@ -52,7 +52,6 @@ class indexes(Task):
 					field : [i],
 					'threshold' : self.config['threshold'],
 					'pixels' : np.ma.count(rb)
-					
 				}
 				
 				#should we apply a thresholded filter?
