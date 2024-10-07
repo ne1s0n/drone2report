@@ -1,7 +1,9 @@
 import os
 import numpy as np
 import skimage.draw
+import pprint
 import d2r.dataset
+import d2r.tasks.matrix_returning_indexes as mri
 
 def find_case_insensitve(dirname, extensions):
 	"""find all files in passed folder with the passed extension, case insensitive"""
@@ -67,3 +69,31 @@ def draw_ROI_perimeter(ROIs, target_img, raster_data, verbose=False):
 		#drawing the polygon in red
 		rr, cc = skimage.draw.polygon_perimeter(coords2[:,1], coords2[:,0], raster_data.shape)
 		raster_data[rr, cc, :] = (255, 0, 0)
+
+def thresholded_filter(raster, channels, filter_string):
+	"""Tries to apply a filtering expression to a raster ROI, or dies trying"""
+	#this loop will either assign a value to "sel" or generate an exception and crash
+	while True:
+		try:
+			exec('sel = ' + filter_string)
+		except NameError as e:
+			#let's define the missing variable, if valid
+			if not hasattr(mri, e.name):
+				raise ValueError('requested unknown index (case sensitive): ' + e.name)
+			index_function = getattr(mri, e.name)
+			exec(e.name + '= index_function(raster, channels)')
+		
+		#checking if we need to keep going or not
+		if 'sel' in locals():
+			break
+	
+	#if we get here we have defined sel (in a dynamic context)
+	#let's apply the newfound filtering mask to the existing one, once
+	#for each existing channel
+	for i in range(raster.mask.shape[2]):
+		#rembember that the mask tells what values to NOT use, and the
+		#user in the ini specify the target areas to ACTUALLY use. Thus,
+		#we need a logical not
+		raster.mask[:, :, i] = raster.mask[:, :, i] | np.ma.logical_not(eval('sel'))
+		
+	return(raster)

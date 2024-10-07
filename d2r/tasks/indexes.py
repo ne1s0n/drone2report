@@ -40,7 +40,7 @@ class indexes(Task):
 			if rb is None:
 				#if rb is None it means that we have asked for data outside the image
 				print('Warning: ROI marked with ' + field + '=' + i + ' is outside the image borders. Ignored.')
-			else
+			else:
 				#starting to build the saved dict
 				(ortho, shapes) = dataset.get_files()
 				d = {
@@ -48,8 +48,14 @@ class indexes(Task):
 					'dataset' : dataset.get_title(),
 					'ortho_file' : ortho, 
 					'shapes_file' : shapes,
-					field : [i]
+					'channels' : ' '.join(dataset.get_channels()),
+					field : [i],
+					'threshold' : self.config['threshold']
 				}
+				
+				#should we apply a thresholded filter?
+				if self.config['threshold'] is not None:
+					rb = d2r.misc.thresholded_filter(rb, dataset.get_channels(), self.config['threshold'])
 
 				#for each required index
 				for current_index in index_names:
@@ -79,7 +85,9 @@ class indexes(Task):
 	def parse_config(self, config):
 		"""parsing index-specific config parameters"""
 		res = super().parse_config(config)
-		#no specific parsing required so far
+		
+		#default values
+		if 'threshold' not in res:
+			res['threshold'] = None
+		
 		return(res)
-
-
