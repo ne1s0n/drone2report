@@ -56,9 +56,11 @@ class indexes(Task):
 					if hasattr(mri, current_index):
 						current_index_function = getattr(mri, current_index)
 						myindex = current_index_function(rb, dataset.get_channels())
-						d[current_index + '_mean'] = np.mean(myindex)
-						d[current_index + '_max'] = np.max(myindex)
-						d[current_index + '_min'] = np.min(myindex)
+						d[current_index + '_mean'] = np.ma.mean(myindex)
+						d[current_index + '_median'] = np.ma.median(myindex)
+						d[current_index + '_std'] = np.ma.std(myindex)
+						d[current_index + '_max'] = np.ma.max(myindex)
+						d[current_index + '_min'] = np.ma.min(myindex)
 					
 					#if it's an array-returning index, we are going to compute 
 					#it and then just store the info
