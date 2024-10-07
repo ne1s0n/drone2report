@@ -50,12 +50,15 @@ class indexes(Task):
 					'shapes_file' : shapes,
 					'channels' : ' '.join(dataset.get_channels()),
 					field : [i],
-					'threshold' : self.config['threshold']
+					'threshold' : self.config['threshold'],
+					'pixels' : np.ma.count(rb)
+					
 				}
 				
 				#should we apply a thresholded filter?
 				if self.config['threshold'] is not None:
 					rb = d2r.misc.thresholded_filter(rb, dataset.get_channels(), self.config['threshold'])
+				d['pixels_after_threshold'] = np.ma.count(rb)
 
 				#for each required index
 				for current_index in index_names:
