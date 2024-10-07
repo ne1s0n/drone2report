@@ -252,24 +252,17 @@ class Dataset:
 		"""all the values in the passed column"""
 		return(self.shapes.loc[:, polygon_field])
 
-	def get_geom_raster(self, polygon_id=None, polygon_field=None, polygon_order=None, normalize_if_possible=False):
-		"""
-		Returns the raster data for the specified polygon
+	def get_geom(self, polygon_id=None, polygon_field=None, polygon_order=None):
+		"""Returns one of the stored geometries, either via index field or simple storing order
 		
-		Loads in memory and returns the raster data inside the specified polygon as a
-		clipped numpy ndarray in the (rows, columns, channel) order. The polygon can
-		be selected either:
+		The geometry can be selected either:
 		- using 'polygon_field' and 'polygon id', if a .dbf file was present
 		- using a number representing the reading order from the shape file via the 'polygon_order' parameter
 		
 		Note that the two above options are incompatible, if both or none are specified an
 		error is raised. 
-		
-		If "normalize_if_possible" is true, the function will try
-		to divide the data by the max_value parameter before returning it,
-		so to force the range of the output in the [0,1] interval. However,
-		if max_value is not defined, it will silently skip the division
 		"""
+		
 		#interface 
 		if not ((polygon_id is None) ^ (polygon_order is None)):
 			raise ValueError('One and only one way to select the polygon should be specified, either via a field or via a numeral')
@@ -285,13 +278,23 @@ class Dataset:
 		if (polygon_order is not None):
 			shape = self.shapes.iloc[polygon_order, :]
 			geom = shape.geometry
-
-		#check if the polygon is inside the raster data
-		if not self.is_bounding_box_inside(geom):
-			if self.config['verbose']:
-				msg = 'Requested data for a geometry outside the image limits. Returning None\n' + shape.to_string()
-				warnings.warn(msg)
-			return None
+		
+		return(geom)
+		
+	def get_geom_raster(self, polygon_id=None, polygon_field=None, polygon_order=None, normalize_if_possible=False):
+		"""
+		Returns the raster data for the specified polygon
+		
+		Loads in memory and returns the raster data inside the specified polygon as a
+		clipped numpy ndarray in the (rows, columns, channel) order. 
+		
+		If "normalize_if_possible" is true, the function will try
+		to divide the data by the max_value parameter before returning it,
+		so to force the range of the output in the [0,1] interval. However,
+		if max_value is not defined, it will silently skip the division
+		"""
+		#getting the requested geometry (or die trying)
+		geom = self.get_geom(polygon_id=polygon_id, polygon_field=polygon_field, polygon_order=polygon_order)
 		
 		#extract the bounding box for the geometry from the raster dataset
 		#data is in channel-last at this point format
@@ -382,6 +385,11 @@ class Dataset:
 		#masking the original raster
 		return(mask)
 
+	def get_geom_centroid(self, polygon_id=None, polygon_field=None, polygon_order=None):
+		""""returns the passed geometry centroid"""
+		geom = self.get_geom(polygon_id, polygon_field, polygon_order)
+		return (geom.centroid.x, geom.centroid.y)
+		
 	def is_bounding_box_inside(self, geom):
 		"""returns True if all points of the geometry are pixel-wise inside the image, False otherwise"""
 		#getting pixel-wise limits of the passed geometry

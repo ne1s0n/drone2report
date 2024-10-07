@@ -41,8 +41,11 @@ class indexes(Task):
 				#if rb is None it means that we have asked for data outside the image
 				print('Warning: ROI marked with ' + field + '=' + i + ' is outside the image borders. Ignored.')
 			else:
-				#starting to build the saved dict
+				#collecting required data
 				(ortho, shapes) = dataset.get_files()
+				(cx, cy) = dataset.get_geom_centroid(polygon_field=field, polygon_id=i)
+				
+				#starting to build the saved dict
 				d = {
 					'type' : dataset.get_type(), 
 					'dataset' : dataset.get_title(),
@@ -50,6 +53,8 @@ class indexes(Task):
 					'shapes_file' : shapes,
 					'channels' : ' '.join(dataset.get_channels()),
 					field : [i],
+					'centroid_x' : cx,
+					'centroid_y' : cy,
 					'threshold' : self.config['threshold'],
 					'pixels' : np.ma.count(rb)
 				}
