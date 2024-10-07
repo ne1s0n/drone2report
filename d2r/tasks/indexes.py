@@ -37,8 +37,10 @@ class indexes(Task):
 		for i in tqdm(dataset.get_geom_field(field)):
 			rb = dataset.get_geom_raster(polygon_field=field, polygon_id=i, normalize_if_possible=True)
 			
-			#if rb is None it means that we have asked for data outside the image
-			if rb is not None:
+			if rb is None:
+				#if rb is None it means that we have asked for data outside the image
+				print('Warning: ROI marked with ' + field + '=' + i + ' is outside the image borders. Ignored.')
+			else
 				#starting to build the saved dict
 				(ortho, shapes) = dataset.get_files()
 				d = {
