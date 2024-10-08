@@ -19,22 +19,7 @@ def dataset_factory(title, config):
 		return []
 	
 	if config['type'] == 'tif_multichannel':
-		#sanity
-		if not os.path.exists(config['orthomosaic']):
-			warnings.warn('Section ' + title + ' contains non-existing orthomosaic path ' + config['orthomosaic'])
-			return []
-		#either specify a data folder or a single file
-		if os.path.isfile(config['orthomosaic']):
-			#single file specified. Let's just explicitly inform the class constructor
-			return [Dataset(title, config, config['orthomosaic'])]
-		if os.path.isdir(config['orthomosaic']):
-			#for all the tif in the folder let's instantiate a different Dataset object
-			files = d2r.misc.find_case_insensitve(config['orthomosaic'], ['.tif', '.tiff'])
-			res = []
-			for f in files:
-				#instantiating a single dataset object for each single file
-				res.append(Dataset(title, config, f))
-			return(res)
+		return [Dataset(title, config, config['orthomosaic'])]
 	
 	#if we get here something went wrong
 	raise ValueError('Unknown type "' + config['type'] + '" found when parsing DATA section ' + title)
