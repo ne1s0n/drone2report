@@ -13,9 +13,7 @@ import d2r.tasks.array_returning_indexes  as ari
 class indexes(Task):
 	def run(self, dataset):
 		#the output path
-		(ortho, shapes) = dataset.get_files()
-		(ortho, ext) = d2r.misc.get_file_corename_ext(ortho)
-		outfile = os.path.join(self.config['outfolder'], 'indexes_' + dataset.get_title() + '_' + ortho + '.csv')
+		outfile = os.path.join(self.config['outfolder'], 'indexes_' + dataset.get_title() + '.csv')
 		path = pathlib.Path(self.config['outfolder'])
 		path.mkdir(parents=True, exist_ok=True)		
 
@@ -49,7 +47,7 @@ class indexes(Task):
 				d = {
 					'type' : dataset.get_type(), 
 					'dataset' : dataset.get_title(),
-					'ortho_file' : ortho, 
+					'ortho_files' : ' '.join(ortho), 
 					'shapes_file' : shapes,
 					'channels' : ' '.join(dataset.get_channels()),
 					field : [i],

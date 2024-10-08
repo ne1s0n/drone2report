@@ -36,13 +36,9 @@ class thumbnail(Task):
 
 		#for each required threshold
 		for threshold_current in self.config['index_thresholds']:
-			#building the output path
-			(ortho, shapes) = dataset.get_files()
-			(ortho, ext) = d2r.misc.get_file_corename_ext(ortho)
-			
 			#building the file name, which is slightly different if we 
 			#are doing a regular threshold or an infinite threshold
-			outfile = os.path.join(self.config['outfolder'], dataset.get_title() + '_' + ortho)
+			outfile = os.path.join(self.config['outfolder'], dataset.get_title())
 			if threshold_current != np.inf:
 				outfile = outfile + '_index' + self.config['index_investigated'] + '_threshold' + str(threshold_current)
 			outfile = outfile + '.png'
