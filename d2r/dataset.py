@@ -19,15 +19,14 @@ def dataset_factory(title, config):
 		return []
 	
 	if config['type'] == 'tif_multichannel':
-		return [Dataset(title, config, config['orthomosaic'])]
+		return [Dataset(title, config)]
 	
 	#if we get here something went wrong
 	raise ValueError('Unknown type "' + config['type'] + '" found when parsing DATA section ' + title)
 
 class Dataset:
-	def __init__(self, title, config, infile):
+	def __init__(self, title, config):
 		self.title = title
-		self.orthomosaic_file = infile
 		
 		#parsing series, progressive number (if present)
 		pieces = title.split(' ')
@@ -42,7 +41,6 @@ class Dataset:
 			
 		#we are ready to initialize the data
 		self.__load()
-			
 
 	def parse_config(self, config):
 		"""the basic parsing of the config object, returns two dict (config and meta), all keys to lower case"""
@@ -54,6 +52,10 @@ class Dataset:
 		res = {}
 		meta = {}
 		
+		#orthomosaic files and channels require a special treatment
+		orthofiles = {}
+		channels = {}
+		
 		#and here we set a default
 		res['max_value'] = None
 		
@@ -61,32 +63,78 @@ class Dataset:
 		for key in config:
 			if key.startswith('meta_'):
 				meta[key[5:]] = config[key]
-			elif key == 'channels':
-				res[key] = d2r.misc.parse_channels(config[key])
+			elif key.startswith('orthomosaic'):
+				orthofiles[key] = config[key]
+			elif key.startswith('channels'):
+				channels[key] = config[key]
+				#res[key] = d2r.misc.parse_channels(config[key])
 			elif key in ['nodata', 'max_value']:
 				res[key] = int(config[key])
 			else:
 				#everything else is just copied
 				res[key] = config[key]
 				
+		#at this point we should have collected orthofiles and channel specs
+		self.datasources = self.parse_datasources(orthofiles, channels)
+		
+		#if we have duplicate channel names we have a problem
+		ch = []
+		for key in self.datasources:
+			ch = ch + self.datasources[key][1]
+		if len(ch) != len(set(ch)):
+			raise ValueError('Duplicate channel names: ' + str(ch))
+		
 		#some fields are required, let's check on them
 		if 'type' not in res:
 			raise ValueError('Missing "type" field for dataset: ' + self.title)
-		if 'channels' not in res:
-			raise ValueError('Missing "channels" field for dataset: ' + self.title)
+		if len(self.datasources) == 0:
+			raise ValueError('You need to specify at least a pair of "orthomosaic" and "channels" fields')
 
 		return(res, meta)
 
+	def parse_datasources(self, orthofiles, channels):
+		res = {}
+		
+		#let's parse the orthofiles first
+		for key in orthofiles:
+			pieces = key.split('_', 1)
+			#making sure that there's an empty string as qualifier for the single-file case
+			if len(pieces) == 1:
+				pieces.append('')
+			
+			#storing
+			res[pieces[1]] = [orthofiles[key], None]
+		
+		#let's parse the channels
+		for key in channels:
+			pieces = key.split('_', 1)
+			#making sure that there's an empty string as qualifier for the single-file case
+			if len(pieces) == 1:
+				pieces.append('')
+			
+			#check for channels without a file
+			if pieces[1] not in res:
+				raise ValueError('Orphaned channels field, no orthofile specified: ' + key)
+		
+			#storing
+			res[pieces[1]][1] = d2r.misc.parse_channels(channels[key])
+
+		#checking that all orthofiles have a corresponding channel list
+		for key in res:
+			if res[key][1] is None:
+				raise ValueError('Orphaned orthofile, no channels specified: ' + key)
+		
+		#if we get here we are good to go
+		return(res)
+
 	def to_string(self):
-		(ortho, shapes) = self.get_files()
-		(core, ext) = d2r.misc.get_file_corename_ext(ortho)
-		return(self.title + ' (' + self.config['type'] + ', ' + core + ')') 
+		return(self.title + ' (' + self.config['type'] + ')') 
 	def get_meta(self):
 		return(self.meta)
 	def get_config(self):
 		return(self.config)
 	def get_channels(self):
-		return self.config['channels']
+		return self.channels
 	def get_title(self):
 		return self.title
 	def get_type(self):
@@ -120,7 +168,6 @@ class Dataset:
 		rescale_to_255 : if True the values will be rescaled to the 0-255 range
 		normalize_if_possible : if True, and if "max_value" has been defined in config, all data will be divided by max_value, so to stay in the 0-1 ramge 
 		"""
-
 		#a resized gdal dataset
 		resized_ds = self.get_resized_ds(target_width = output_width)
 
@@ -162,27 +209,65 @@ class Dataset:
 		return(raster_output)
 	
 	def __load(self):
-		"""initializes the dataset structures"""
+		"""initializes the dataset structures for the corresponding datasource entry"""
+		self.ds = {}
+		
 		print('\n---------------------------')
 		print('Dataset ' + self.title)
-		print('opening image file ' + self.orthomosaic_file)
-		self.ds = gdal.Open(self.orthomosaic_file, gdal.GA_ReadOnly)
-		print("Projection: ", self.ds.GetProjection())  # get projection
-		print("Columns:", self.ds.RasterXSize)  # number of columns
-		print("Rows:", self.ds.RasterYSize)  # number of rows
-		print("Band count:", self.ds.RasterCount)  # number of bands
+		for key in self.datasources:
+			self.__load_one_dataset(key)
+
+		#if more than one image are loaded we join them
+		self.__join_datasets()
+		
+		#should we print some info about the resulting joined dataset?
+		if 	self.joined_sources:
+			print('- merged channels: ' + str(self.channels))
+			print('- merged resolution: (' + str(self.ds.RasterXSize) +  ',' + str(self.ds.RasterYSize) + ')\n')
+			
+		#opening shapes file
+		print('opening shape file ' + self.config['shapes_file'])
+		self.shapes = gpd.read_file(self.config['shapes_file'])
+		print('- found ' + str(len(self.shapes.index)) + ' ROIs with fields ' + str(list(self.shapes)))
+
+		#at this point self.ds is a single gdal dataset (it's not a dict
+		#anymore). Let's play it safe and convert the shapefile orthomosaic 
+		#projection to an osr SpatialReference object
+		spatial_ref = osr.SpatialReference()
+		spatial_ref.ImportFromWkt(self.ds.GetProjection())
+
+		#convert to a proj4 string or EPSG code that geopandas can use
+		proj4_string = spatial_ref.ExportToProj4()
+
+		#reproject the shapefile to match the orthomosaic's CRS
+		self.shapes = self.shapes.to_crs(proj4_string)
+		
+	def __load_one_dataset(self, dataset_key):
+		"""initializes the dataset structures for the corresponding datasource entry"""
+		infile = self.datasources[dataset_key][0]
+		channels = self.datasources[dataset_key][1]
+		print('Opening image file ' + infile)
+		self.ds[dataset_key] = gdal.Open(infile, gdal.GA_ReadOnly)
+		#local copy for leaner code
+		ds =  self.ds[dataset_key]
+		
+		print(" - projection: ", ds.GetProjection())  # get projection
+		print(" - columns:", ds.RasterXSize)  # number of columns
+		print(" - rows:", ds.RasterYSize)  # number of rows
+		print(" - band count:", ds.RasterCount)  # number of bands
 		
 		#check on band names
-		if len(self.config['channels']) != self.ds.RasterCount:
-			raise ValueError('Image has ' + str(self.ds.RasterCount) + ' bands but config specifies ' + 
-				str(len(self.config['channels'])) + ' of them')
-		print("Band names:", self.config['channels']) 
+		if len(channels) != ds.RasterCount:
+			raise ValueError('Image has ' + str(ds.RasterCount) + ' bands but config specifies ' + 
+				str(len(channels)) + ' of them')
+		print(" - band names:", channels) 
 		
 		#reading the nodata values
 		nodata = []
-		for i in range(self.ds.RasterCount):  
-			band = self.ds.GetRasterBand(i+1) # GDAL bands are 1-indexed
+		for i in range(ds.RasterCount):  
+			band = ds.GetRasterBand(i+1) # GDAL bands are 1-indexed
 			nodata.append(band.GetNoDataValue())
+
 		#checking if there's more than one nodata value 
 		nodata = list(set(nodata))
 		if len(nodata) > 1:
@@ -206,26 +291,99 @@ class Dataset:
 		else:
 			#storing the newfound nodata value from image file
 			self.nodata = nodata
-		print('Value used for nodata pixels: ' + str(self.nodata))
+		print(' - value used for nodata pixels: ' + str(self.nodata))
+		
+		#we are done, print an empty line for formatting
+		print("")
+
+	def __join_datasets(self):
+		"""joins all available gdal datasets and channels"""
+		#let's do the simple case: just one dataset
+		if len(self.ds) == 1:
+			self.joined_sources = False
+			key = list(self.ds.keys())[0]
+			self.ds = self.ds[key]
+			self.channels = self.datasources[key][1]
+			return None
+
+		#if we get here we have more datasets to be joined
+		self.joined_sources = True
+		
+		#joining the channels
+		self.channels = []
+		for key in self.datasources:
+			self.channels = self.channels + self.datasources[key][1]
+
+		#creating a joined GDAL dataset
+		reference = self.get_reference_datasource()
+		print('Merging images, resolution taken from image: ' + reference)
+		
+		#creating the joined image ds, in memory
+		cols = self.ds[reference].RasterXSize
+		rows = self.ds[reference].RasterYSize
+		mem_driver = gdal.GetDriverByName('MEM')
+		ds = mem_driver.Create('', cols, rows, len(self.channels), gdal.GDT_Float32)
+		
+		#uniforming the transformation
+		geotransform = self.ds[reference].GetGeoTransform()
+		projection = self.ds[reference].GetProjection()
+		ds.SetGeoTransform(geotransform)
+		ds.SetProjection(projection)
+
+		print('\ngeotransform')
+		print('xRes=', str(geotransform[1]))
+		print('yRes=', str(-geotransform[5]))
+		print('outBounds=', str(
+						[
+					geotransform[0], geotransform[3], 
+					geotransform[0] + cols * geotransform[1], 
+					geotransform[3] - rows * abs(geotransform[5])
+				]
+		))
+		
+		#copying the band from each dataset: for each image
+		band_cnt = 0
+		for key in self.ds:
+			#align/resample the dataset to the reference
+			print('WARNING: currently flipping the merged image upside down')
+			aligned_dataset = gdal.Warp('', self.ds[key], format='MEM',
+				xRes=geotransform[1],
+				yRes=-geotransform[5], #originally it had a minus sign, no effect at all 
+				outputBounds=[
+					geotransform[0], geotransform[3], 
+					geotransform[0] + cols * geotransform[1], 
+					geotransform[3] - rows * abs(geotransform[5])
+				],
+				dstSRS=projection)
+                          
+			#for each band in that image
+			for band in range(1, aligned_dataset.RasterCount + 1):
+				band_cnt = band_cnt + 1
+				source_band = aligned_dataset.GetRasterBand(band)
+				output_band = ds.GetRasterBand(band_cnt)
+				data = source_band.ReadAsArray()
+				output_band.WriteArray(data)
+				output_band.SetNoDataValue(source_band.GetNoDataValue())  # Preserve nodata values if any
 			
-		#opening shapes file
-		print('opening shape file ' + self.config['shapes_file'])
-		self.shapes = gpd.read_file(self.config['shapes_file'])
-		print('- found ' + str(len(self.shapes.index)) + ' ROIs with fields ' + str(list(self.shapes)))
+			#release the temp dataset and the translated dataset from memory
+			aligned_dataset = None
+			self.ds[key] = None
 		
-		# let's play it safe and convert the orthomosaic projection to an osr SpatialReference object
-		spatial_ref = osr.SpatialReference()
-		spatial_ref.ImportFromWkt(self.ds.GetProjection())
-
-		# Convert to a proj4 string or EPSG code that geopandas can use
-		proj4_string = spatial_ref.ExportToProj4()
-
-		# Reproject the shapefile to match the orthomosaic's CRS
-		self.shapes = self.shapes.to_crs(proj4_string)
+		#at this point no dataset is open except the merged one
+		self.ds = ds
 		
+	def get_reference_datasource(self):
+		"""returns the datasource key for the GDAL dataset to be used as reference for resolution"""
+		print('TODO: function get_reference_datasource() just returns the first image, we should implement a smartest strategy')
+		return(list(self.datasources.keys())[0])
+		
+
 	def get_files(self):
-		"""returns orthomosaic and shapes file names"""
-		ortho = self.orthomosaic_file
+		"""returns orthomosaic(s) and shapes file names"""
+		ortho = []
+		for key in self.datasources:
+			ortho.append(self.datasources[key][0])
+		
 		shapes = self.config['shapes_file']
 		return(ortho, shapes)
 
