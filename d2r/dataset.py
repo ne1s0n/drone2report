@@ -213,7 +213,7 @@ class Dataset:
 		self.ds = {}
 		
 		print('\n---------------------------')
-		print('Dataset ' + self.title)
+		print('DATASET ' + self.title)
 		for key in self.datasources:
 			self.__load_one_dataset(key)
 
@@ -222,8 +222,8 @@ class Dataset:
 		
 		#should we print some info about the resulting joined dataset?
 		if 	self.joined_sources:
-			print('- merged channels: ' + str(self.channels))
-			print('- merged resolution: (' + str(self.ds.RasterXSize) +  ',' + str(self.ds.RasterYSize) + ')\n')
+			d2r.misc.print_gdal_info(self.ds, 'merged image', self.channels) 
+			print('\n')
 			
 		#opening shapes file
 		print('opening shape file ' + self.config['shapes_file'])
@@ -250,17 +250,12 @@ class Dataset:
 		self.ds[dataset_key] = gdal.Open(infile, gdal.GA_ReadOnly)
 		#local copy for leaner code
 		ds =  self.ds[dataset_key]
-		
-		print(" - projection: ", ds.GetProjection())  # get projection
-		print(" - columns:", ds.RasterXSize)  # number of columns
-		print(" - rows:", ds.RasterYSize)  # number of rows
-		print(" - band count:", ds.RasterCount)  # number of bands
+		d2r.misc.print_gdal_info(ds, dataset_key, channels)
 		
 		#check on band names
 		if len(channels) != ds.RasterCount:
 			raise ValueError('Image has ' + str(ds.RasterCount) + ' bands but config specifies ' + 
 				str(len(channels)) + ' of them')
-		print(" - band names:", channels) 
 		
 		#reading the nodata values
 		nodata = []
@@ -330,32 +325,14 @@ class Dataset:
 		ds.SetGeoTransform(geotransform)
 		ds.SetProjection(projection)
 
-		print('\ngeotransform')
-		print('xRes=', str(geotransform[1]))
-		print('yRes=', str(-geotransform[5]))
-		print('outBounds=', str(
-						[
-					geotransform[0], geotransform[3], 
-					geotransform[0] + cols * geotransform[1], 
-					geotransform[3] - rows * abs(geotransform[5])
-				]
-		))
-		
 		#copying the band from each dataset: for each image
 		band_cnt = 0
 		for key in self.ds:
 			#align/resample the dataset to the reference
-			print('WARNING: currently flipping the merged image upside down')
-			aligned_dataset = gdal.Warp('', self.ds[key], format='MEM',
+			aligned_dataset = gdal.Warp('', self.ds[key], format='MEM', 
 				xRes=geotransform[1],
-				yRes=-geotransform[5], #originally it had a minus sign, no effect at all 
-				outputBounds=[
-					geotransform[0], geotransform[3], 
-					geotransform[0] + cols * geotransform[1], 
-					geotransform[3] - rows * abs(geotransform[5])
-				],
-				dstSRS=projection)
-                          
+				yRes=geotransform[5])
+				
 			#for each band in that image
 			for band in range(1, aligned_dataset.RasterCount + 1):
 				band_cnt = band_cnt + 1
