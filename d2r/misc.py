@@ -79,10 +79,23 @@ def thresholded_filter(raster, channels, filter_string):
 			exec('sel = ' + filter_string)
 		except NameError as e:
 			#let's define the missing variable, if valid
-			if not hasattr(mri, e.name):
-				raise ValueError('requested unknown index (case sensitive): ' + e.name)
-			index_function = getattr(mri, e.name)
-			exec(e.name + '= index_function(raster, channels)')
+			found = False
+			
+			#is the missing variable an matrix-returning index function?
+			if hasattr(mri, e.name):
+				found = True
+				index_function = getattr(mri, e.name)
+				exec(e.name + '= index_function(raster, channels)')
+			
+			#is the missing variable a channel?
+			if e.name in channels:
+				found = True
+				i = channels.index(e.name)
+				exec(e.name + '= raster[:,:,i]')
+			
+			#have we found something?
+			if not found:
+				raise ValueError('In .ini file, requested unknown index or channels (case sensitive): ' + e.name)
 		
 		#checking if we need to keep going or not
 		if 'sel' in locals():
