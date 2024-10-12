@@ -28,11 +28,21 @@ class thumbnail(Task):
 			output_width = self.config['output_width'], 
 			rescale_to_255=self.config['rescale_to_255'], normalize_if_possible=False)
 
-		#computing the index over all image
+		#computing the index/channel over all image
 		myindex = None	
 		if self.config['index_investigated'] is not None:
-			index_function = getattr(d2r.tasks.matrix_returning_indexes, self.config['index_investigated'])
-			myindex = index_function(raster_data_raw, dataset.get_channels())
+			myindex = None
+			#is it an actual index?
+			if hasattr(d2r.tasks.matrix_returning_indexes, self.config['index_investigated']):
+				index_function = getattr(d2r.tasks.matrix_returning_indexes, self.config['index_investigated'])
+				myindex = index_function(raster_data_raw, dataset.get_channels())
+			#is is a simple channel?
+			if self.config['index_investigated'] in dataset.get_channels():
+				i = dataset.get_channels().index(self.config['index_investigated'])
+				myindex = raster_data_raw[:,:,i]
+			#have we failed
+			if myindex is None:
+				raise ValueError('In .ini file, requested unknown index or channels (case sensitive): ' + myindex)
 
 		#for each required threshold
 		for threshold_current in self.config['index_thresholds']:
@@ -75,7 +85,6 @@ class thumbnail(Task):
 		#save the image
 		foo = Image.fromarray(output_raster.astype(np.uint8))
 		foo.save(outfile)
-
 
 	def parse_config(self, config):
 		"""parsing config parameters specific to this subclass"""
