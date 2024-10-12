@@ -64,9 +64,11 @@ class indexes(Task):
 
 				#for each required index
 				for current_index in index_names:
+					found = False
 					#if it's a matrix-returning index, we are going to compute it and
 					#then store some general statistics
 					if hasattr(mri, current_index):
+						found = True
 						current_index_function = getattr(mri, current_index)
 						myindex = current_index_function(rb, dataset.get_channels())
 						d[current_index + '_mean'] = np.ma.mean(myindex)
@@ -75,11 +77,29 @@ class indexes(Task):
 						d[current_index + '_max'] = np.ma.max(myindex)
 						d[current_index + '_min'] = np.ma.min(myindex)
 					
+					#if it's the name of a channel we are going to compute its 
+					#values and store some general statistics
+					if current_index in dataset.get_channels():
+						found = True
+						i = dataset.get_channels().index(current_index)
+						requested_channel = rb[:, :, i]
+						
+						d[current_index + '_mean'] = np.ma.mean(requested_channel)
+						d[current_index + '_median'] = np.ma.median(requested_channel)
+						d[current_index + '_std'] = np.ma.std(requested_channel)
+						d[current_index + '_max'] = np.ma.max(requested_channel)
+						d[current_index + '_min'] = np.ma.min(requested_channel)
+
 					#if it's an array-returning index, we are going to compute 
 					#it and then just store the info
 					if hasattr(ari, current_index):
+						found = True
 						current_index_function = getattr(ari, current_index)
 						d.update(current_index_function(rb, dataset.get_channels()))
+					
+					#if we get here and the index is unknown we raise an error
+					if not found:
+						raise ValueError('In the .ini file it is requested an unknown index: ' + current_index)
 					
 				#storing the results
 				df = pd.concat([df, pd.DataFrame.from_dict(d)])
