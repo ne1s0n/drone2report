@@ -62,10 +62,10 @@ class thumbnail(Task):
 		output_raster = raster_data_visible.copy()
 		
 		#thresholding
-		if self.config['index_investigated'] is not None:
+		if index_current is not None:
 			selector = index_current > threshold_current
 			selector = np.ma.filled(selector, fill_value=False)
-			output_raster[selector, :] = (255, 0, 255)
+			output_raster[selector, :] = (0, 255, 255)
 		
 		#should we draw the ROI perimeters, too? 
 		if self.config['draw_rois']:

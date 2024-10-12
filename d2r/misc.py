@@ -4,6 +4,7 @@ import skimage.draw
 import pprint
 import d2r.dataset
 import d2r.tasks.matrix_returning_indexes as mri
+from osgeo import gdal
 
 def find_case_insensitve(dirname, extensions):
 	"""find all files in passed folder with the passed extension, case insensitive"""
@@ -118,3 +119,18 @@ def print_gdal_info(ds, title, channels=None):
 	else:
 		print(" - band names: unspecified") 
 		
+def make_VRT(datasets, verbose = True):
+	"""merges all gdal datasets from a dict into a single VRT, max resolution"""
+	if verbose : print('Merging ' + str(len(datasets)) + ' images')
+	cnt = 1
+	all_stuff = []
+	for key, ds in datasets.items():
+		if verbose: print('Reading from image ' + str(cnt) + ' band ', end = '', flush=True)
+		cnt = cnt + 1
+		for i in range(ds.RasterCount):
+			if verbose: print(str(i+1) + ' ', end = '', flush=True)
+			all_stuff.append(gdal.Translate('', ds, format='MEM', bandList=[i+1]))
+		if verbose: print('')
+	
+	vrt = gdal.BuildVRT('', all_stuff, separate=True, resolution='highest')
+	return(vrt)

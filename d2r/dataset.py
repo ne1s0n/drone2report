@@ -288,6 +288,11 @@ class Dataset:
 			self.nodata = nodata
 		print(' - value used for nodata pixels: ' + str(self.nodata))
 		
+		#at this point we set the nodata value to what specified
+		for i in range(1, ds.RasterCount + 1):  # Bands are 1-indexed
+			band = ds.GetRasterBand(i)
+			band.SetNoDataValue(nodata)
+
 		#we are done, print an empty line for formatting
 		print("")
 
@@ -301,59 +306,34 @@ class Dataset:
 			self.channels = self.datasources[key][1]
 			return None
 
-		#if we get here we have more datasets to be joined
+		#if we get here we have two or more datasets to be joined
 		self.joined_sources = True
+		
+		if 'nodata' not in self.config:
+			raise ValueError('You defined a joined dataset with data sourced from multiple images. You need to specify a nodata field in the ini file that will be used for all bands')
 		
 		#joining the channels
 		self.channels = []
 		for key in self.datasources:
 			self.channels = self.channels + self.datasources[key][1]
-
-		#creating a joined GDAL dataset
-		reference = self.get_reference_datasource()
-		print('Merging images, resolution taken from image: ' + reference)
-		
-		#creating the joined image ds, in memory
-		cols = self.ds[reference].RasterXSize
-		rows = self.ds[reference].RasterYSize
-		mem_driver = gdal.GetDriverByName('MEM')
-		ds = mem_driver.Create('', cols, rows, len(self.channels), gdal.GDT_Float32)
-		
-		#uniforming the transformation
-		geotransform = self.ds[reference].GetGeoTransform()
-		projection = self.ds[reference].GetProjection()
-		ds.SetGeoTransform(geotransform)
-		ds.SetProjection(projection)
-
-		#copying the band from each dataset: for each image
-		band_cnt = 0
-		for key in self.ds:
-			#align/resample the dataset to the reference
-			aligned_dataset = gdal.Warp('', self.ds[key], format='MEM', 
-				xRes=geotransform[1],
-				yRes=geotransform[5])
-				
-			#for each band in that image
-			for band in range(1, aligned_dataset.RasterCount + 1):
-				band_cnt = band_cnt + 1
-				source_band = aligned_dataset.GetRasterBand(band)
-				output_band = ds.GetRasterBand(band_cnt)
-				data = source_band.ReadAsArray()
-				output_band.WriteArray(data)
-				output_band.SetNoDataValue(source_band.GetNoDataValue())  # Preserve nodata values if any
 			
-			#release the temp dataset and the translated dataset from memory
-			aligned_dataset = None
-			self.ds[key] = None
-		
+		#creating a joined GDAL dataset, usign VRT (virtual raster table)
+		ds = d2r.misc.make_VRT(self.ds, self.config['verbose'])
+
 		#at this point no dataset is open except the merged one
 		self.ds = ds
+
+		#the nodata value needs to be specified again for the VRT
+		for i in range(1, ds.RasterCount + 1):  # Bands are 1-indexed
+			band = ds.GetRasterBand(i)
+			band.SetNoDataValue(int(self.config['nodata']))
 		
+		return(None)
+				
 	def get_reference_datasource(self):
 		"""returns the datasource key for the GDAL dataset to be used as reference for resolution"""
 		print('TODO: function get_reference_datasource() just returns the first image, we should implement a smartest strategy')
 		return(list(self.datasources.keys())[0])
-		
 
 	def get_files(self):
 		"""returns orthomosaic(s) and shapes file names"""
