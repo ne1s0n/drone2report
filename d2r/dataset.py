@@ -67,28 +67,36 @@ class Dataset:
 				orthofiles[key] = config[key]
 			elif key.startswith('channels'):
 				channels[key] = config[key]
-				#res[key] = d2r.misc.parse_channels(config[key])
 			elif key in ['nodata', 'max_value']:
 				res[key] = int(config[key])
+			elif key == 'visible_channels':
+				res[key] = d2r.misc.parse_channels(config[key])
 			else:
 				#everything else is just copied
 				res[key] = config[key]
 				
-		#at this point we should have collected orthofiles and channel specs
-		self.datasources = self.parse_datasources(orthofiles, channels)
-		
-		#if we have duplicate channel names we have a problem
-		ch = []
-		for key in self.datasources:
-			ch = ch + self.datasources[key][1]
-		if len(ch) != len(set(ch)):
-			raise ValueError('Duplicate channel names: ' + str(ch))
-		
 		#some fields are required, let's check on them
 		if 'type' not in res:
 			raise ValueError('Missing "type" field for dataset: ' + self.title)
+		if 'visible_channels' not in res:
+			raise ValueError('Missing "visible_channels" field for dataset: ' + self.title)
+
+		#at this point we should have collected orthofiles and channel specs
+		self.datasources = self.parse_datasources(orthofiles, channels)
 		if len(self.datasources) == 0:
 			raise ValueError('You need to specify at least a pair of "orthomosaic" and "channels" fields')
+
+		#if we have duplicate channel names we have a problem
+		all_input_channels = []
+		for key in self.datasources:
+			all_input_channels = all_input_channels + self.datasources[key][1]
+		if len(all_input_channels) != len(set(all_input_channels)):
+			raise ValueError('Duplicate channel names: ' + str(all_input_channels))
+
+		#visible channels should be valid channels, listed in the channels field
+		for ch in res['visible_channels']:
+			if ch not in all_input_channels:
+				raise ValueError('Channel listed as visibile channels, but not in the proper channel list: ' + ch)
 
 		return(res, meta)
 
@@ -135,6 +143,8 @@ class Dataset:
 		return(self.config)
 	def get_channels(self):
 		return self.channels
+	def get_visible_channels(self):
+		return self.config['visible_channels']
 	def get_title(self):
 		return self.title
 	def get_type(self):

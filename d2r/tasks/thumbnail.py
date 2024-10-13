@@ -10,12 +10,6 @@ import d2r.misc
 
 class thumbnail(Task):
 	def run(self, dataset):
-		#are all the required channels (from this task config) available
-		#in the current image?
-		if not set(self.config['visible_channels']).issubset(dataset.get_channels()):
-			print('Skipping: required to create a thumbnail with channels ' + str(self.config['visible_channels']) + ' but the image has ' + str(dataset.get_channels()))
-			return(None)
-
 		#computing the index/channel over all image
 		myindex = self._compute_index(self.config['index_investigated'], dataset)	
 		mysubindex = self._compute_index(self.config['subindex_investigated'], dataset)	
@@ -70,7 +64,7 @@ class thumbnail(Task):
 		#building the file name, which is slightly different if we 
 		#are doing no threshold, index, or subindex
 		outfile = os.path.join(self.config['outfolder'], dataset.get_title())
-		outfile = outfile + '_' + ''.join(self.config['visible_channels'])
+		outfile = outfile + '_' + ''.join(dataset.get_visible_channels())
 		if index is not None:
 			outfile = outfile + '_index' + self.config['index_investigated'] + '_threshold' + str(index_threshold)
 		if subindex is not None:
@@ -88,7 +82,7 @@ class thumbnail(Task):
 
 		#I just need the visible channels here, for output	
 		output_raster = dataset.get_raster_data(
-			selected_channels = self.config['visible_channels'], 
+			selected_channels = dataset.get_visible_channels(), 
 			output_width = self.config['output_width'], 
 			rescale_to_255=self.config['rescale_to_255'], normalize_if_possible=False)
 
@@ -119,8 +113,6 @@ class thumbnail(Task):
 		for key in res:
 			if key == 'output_width':
 				res[key] = int(res[key])
-			elif key == 'visible_channels':
-				res[key] = d2r.misc.parse_channels(res[key])
 			elif key in ['index_thresholds', 'subindex_thresholds']:
 				res[key] = [float(x) for x in res[key].split(',')]
 			elif key in ['rescale_to_255', 'draw_ROIs']:
