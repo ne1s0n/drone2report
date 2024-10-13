@@ -114,7 +114,8 @@ def thresholded_filter(raster, channels, filter_string):
 
 def print_gdal_info(ds, title, channels=None):
 	"""prints information on the passed gdal dataset"""
-	print(' - title: ' + title)
+	if title != '':
+		print(' - title: ' + title)
 	print(" - projection: ", ds.GetProjection())  # get projection
 	gt = ds.GetGeoTransform() 
 	print(" - geotransform:", 
@@ -123,10 +124,9 @@ def print_gdal_info(ds, title, channels=None):
 		' yRot=', str(gt[2]), 
 		' minY=', str(gt[3]), 
 		' xRot=', str(gt[4]), 
-		' yRes=', str(gt[5]))  
-	print(" - columns:", ds.RasterXSize)  # number of columns
-	print(" - rows:", ds.RasterYSize)  # number of rows
-	print(" - band count:", ds.RasterCount)  # number of bands
+		' yRes=', str(gt[5]))
+	print(" - size (cols, rows, bands): " + str(ds.RasterXSize) + ',' + str(ds.RasterYSize) +  ',' + str(ds.RasterCount))  
+		  
 	if channels is not None:
 		print(" - band names: ", str(channels)) 
 	else:

@@ -234,6 +234,9 @@ class Dataset:
 		if 	self.joined_sources:
 			d2r.misc.print_gdal_info(self.ds, 'merged image', self.channels) 
 			print('\n')
+		
+		#listing visible channels
+		print(' Visible bands (rendered as RGB): ' + str(self.config['visible_channels']) + '\n')
 			
 		#opening shapes file
 		print('opening shape file ' + self.config['shapes_file'])
