@@ -7,7 +7,7 @@ Clone the repository, create the conda enviroment with:
 
 `conda env create --file environment.yml`
 
-Actuvate the environment
+Activate the environment:
 
 `conda activate drone2report`
 
