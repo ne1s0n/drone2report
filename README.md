@@ -3,9 +3,16 @@ From orthophoto to summary statistics, indexes, and more.
 
 ## Usage
 
-Clone the repository, create the conda enviroment with:
+Clone the repository:
 
-`conda env create --file environment.yml`
+`git clone https://github.com/ne1s0n/drone2report.git`
+
+Create the conda enviroment with:
+
+```
+cd drone2report
+conda env create --file environment.yml
+```
 
 Activate the environment:
 
