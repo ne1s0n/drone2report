@@ -7,6 +7,10 @@ Clone the repository, create the conda enviroment with:
 
 `conda env create --file environment.yml`
 
+Actuvate the environment
+
+`conda activate drone2report`
+
 then fill an appropriate .ini file and run:
 
 `python3 drone2report.py <your config .ini file>`
