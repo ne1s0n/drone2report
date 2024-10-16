@@ -67,8 +67,8 @@ class Dataset:
 				orthofiles[key] = config[key]
 			elif key.startswith('channels'):
 				channels[key] = config[key]
-			elif key in ['nodata', 'max_value']:
-				res[key] = int(config[key])
+			elif key in ['max_value', 'nodata']:
+				res[key] = float(config[key])
 			elif key == 'visible_channels':
 				res[key] = d2r.misc.parse_channels(config[key])
 			else:
@@ -304,7 +304,8 @@ class Dataset:
 		#at this point we set the nodata value to what specified
 		for i in range(1, ds.RasterCount + 1):  # Bands are 1-indexed
 			band = ds.GetRasterBand(i)
-			band.SetNoDataValue(nodata)
+			if nodata is not None:
+				band.SetNoDataValue(nodata)
 
 		#we are done, print an empty line for formatting
 		print("")
