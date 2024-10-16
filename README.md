@@ -20,7 +20,7 @@ The idea is that you *don't* write any python code, but just fill your appropria
 Then, if you really really want, you can write some python code (i.e. you can easily expand the pipeline with your own custom analyses).
 
 The 
-[sample_config.ini](sample_config.ini) file is self documented and should be enough easy to understand to let you start.
+[sample_config.ini](sample_config.ini) file is self documented and should be easy enough to understand to let you start.
 
 ## The steps
 
