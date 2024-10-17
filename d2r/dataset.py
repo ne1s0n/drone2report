@@ -71,6 +71,8 @@ class Dataset:
 				res[key] = float(config[key])
 			elif key == 'visible_channels':
 				res[key] = d2r.misc.parse_channels(config[key])
+			elif key == 'shapes_index':
+				res[key] = ''.join(config[key].split()).split(',')
 			else:
 				#everything else is just copied
 				res[key] = config[key]
@@ -242,6 +244,7 @@ class Dataset:
 		print('opening shape file ' + self.config['shapes_file'])
 		self.shapes = gpd.read_file(self.config['shapes_file'])
 		print('- found ' + str(len(self.shapes.index)) + ' ROIs with fields ' + str(list(self.shapes)))
+		print('- fields used to uniquely identify a shape: ' + str(self.config['shapes_index']))
 
 		#at this point self.ds is a single gdal dataset (it's not a dict
 		#anymore). Let's play it safe and convert the shapefile orthomosaic 
@@ -359,43 +362,53 @@ class Dataset:
 		return(ortho, shapes)
 
 	def get_geom_index(self):
-		"""returns the name of the field in the shape file that should be used as index"""
+		"""returns a list of the fields in the shape file that should be used as index"""
 		return(self.config['shapes_index'])
 		
 	def get_geom_field(self, polygon_field):
-		"""all the values in the passed column"""
-		return(self.shapes.loc[:, polygon_field])
+		"""all the values in the passed columns"""
+		return(self.shapes[polygon_field])
 
-	def get_geom(self, polygon_id=None, polygon_field=None, polygon_order=None):
+	def get_geom(self, selector):	
 		"""Returns one of the stored geometries, either via index field or simple storing order
 		
-		The geometry can be selected either:
-		- using 'polygon_field' and 'polygon id', if a .dbf file was present
-		- using a number representing the reading order from the shape file via the 'polygon_order' parameter
-		
+		The geometry is selected via the "selector" field, which can be either
+		an integer (it returns that specific polygon, zero-based ordering)
+		or a dictionary with keys the fields(s) to be used to uniquely identify
+		the polygon, and values to actually subsed the polygon geodataframe.
 		Note that the two above options are incompatible, if both or none are specified an
 		error is raised. 
 		"""
 		
-		#interface 
-		if not ((polygon_id is None) ^ (polygon_order is None)):
-			raise ValueError('One and only one way to select the polygon should be specified, either via a field or via a numeral')
+		#sanity
+		if not ((isinstance(selector, int)) ^ (isinstance(selector, dict))):
+			raise ValueError('Passed selector should be either an int or a dict')
 
 		#let's find the polygon requested
 		geom = None
-		if (polygon_id is not None):
-			shape = self.shapes.loc[self.shapes[polygon_field] == polygon_id]
+		if isinstance(selector, int):
+			shape = self.shapes.iloc[selector, :]
+			geom = shape.geometry
+		else:
+			#building a selector with all the required fields and values
+			sel = None
+			for key, value in selector.items():
+				sel_current = self.shapes[key] == value
+				if sel is None:
+					sel = sel_current
+				else:
+					sel = sel & sel_current
+			#doing the selection
+			shape = self.shapes[sel]
+			
 			#sanity check: did we select just one row?
 			if len(shape.index) != 1:
-				raise ValueError('The choice of polygon_field + polygon_id selects either zero or too many polygons: ' + str(polygon_field) + ' = ' + str(polygon_id))
+				raise ValueError('The choice of fields+values (from selector) selects either zero or too many polygons.')
 			geom = shape.iloc[0,:].geometry
-		if (polygon_order is not None):
-			shape = self.shapes.iloc[polygon_order, :]
-			geom = shape.geometry
 		
 		return(geom)
 		
-	def get_geom_raster(self, polygon_id=None, polygon_field=None, polygon_order=None, normalize_if_possible=False):
+	def get_geom_raster(self, selector, normalize_if_possible=False):
 		"""
 		Returns the raster data for the specified polygon
 		
@@ -408,7 +421,7 @@ class Dataset:
 		if max_value is not defined, it will silently skip the division
 		"""
 		#getting the requested geometry (or die trying)
-		geom = self.get_geom(polygon_id=polygon_id, polygon_field=polygon_field, polygon_order=polygon_order)
+		geom = self.get_geom(selector)
 		
 		#extract the bounding box for the geometry from the raster dataset
 		#data is in channel-last at this point format
@@ -499,9 +512,9 @@ class Dataset:
 		#masking the original raster
 		return(mask)
 
-	def get_geom_centroid(self, polygon_id=None, polygon_field=None, polygon_order=None):
+	def get_geom_centroid(self, selector):
 		""""returns the passed geometry centroid"""
-		geom = self.get_geom(polygon_id, polygon_field, polygon_order)
+		geom = self.get_geom(selector)
 		return (geom.centroid.x, geom.centroid.y)
 		
 	def is_bounding_box_inside(self, geom):

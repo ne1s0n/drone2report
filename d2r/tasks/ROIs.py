@@ -16,17 +16,27 @@ class ROIs(Task):
 		
 		#the geometry index, whose values are also used for filenames
 		geoid = dataset.get_geom_index()
+		geometry_columns = dataset.get_geom_field(geoid)
 		
 		#for each ROI
-		for i in tqdm(dataset.get_geom_field(geoid)):
+		for i in tqdm(range(len(geometry_columns))):
+			#selecting the current geometry
+			cg = geometry_columns.iloc[i,:]
+			
 			#build the outfile name, without the extension
-			outfile = os.path.join(path, 'ROI_' + str(i))
+			outfile = 'ROI'
+			for key in geoid:
+				outfile = outfile + '_' + key + '=' + str(cg[key])
+			outfile = os.path.join(path, outfile)
+			
+			#building a selector dict
+			sel = {key : cg[key] for key in geoid}
 			
 			#saving each requested format
-			if self.config['tif'] : self._save_tif(outfile, dataset, geoid, i)
-			if self.config['png'] : self._save_png(outfile, dataset, geoid, i)
+			if self.config['tif'] : self._save_tif(outfile, dataset, sel)
+			if self.config['png'] : self._save_png(outfile, dataset, sel)
 
-	def _save_tif(self, outfile, dataset, geoid, current):
+	def _save_tif(self, outfile, dataset, selector):
 			#build the outfile name
 			outfile_current = outfile + '.tif'
 			
@@ -36,7 +46,7 @@ class ROIs(Task):
 				return(None)
 			
 			#extract the data
-			rb = dataset.get_geom_raster(polygon_id=current, polygon_field=geoid)
+			rb = dataset.get_geom_raster(selector)
 			
 			if rb is None:
 				print('Empty ROI, field=' + str(geoid) + ' value=' + str(current))
@@ -61,7 +71,7 @@ class ROIs(Task):
 			#closing and saving
 			outdataset = None
 		
-	def _save_png(self, outfile, dataset, geoid, current):
+	def _save_png(self, outfile, dataset, selector):
 			#build the outfile name
 			outfile_current = outfile + '.png'
 			
@@ -71,7 +81,7 @@ class ROIs(Task):
 				return(None)
 			
 			#extract the data
-			rb = dataset.get_geom_raster(polygon_id=current, polygon_field=geoid, normalize_if_possible=True)
+			rb = dataset.get_geom_raster(selector, normalize_if_possible=True)
 			
 			if rb is None:
 				print('Empty ROI, field=' + str(geoid) + ' value=' + str(current))

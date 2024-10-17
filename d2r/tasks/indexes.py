@@ -29,11 +29,17 @@ class indexes(Task):
 		index_names = self.config['indexes'].replace(" ", "").split(',')
 		
 		#the field that is used to index geometries in the shape file
-		field = dataset.get_geom_index()
+		fields = dataset.get_geom_index()
+		geometry_columns = dataset.get_geom_field(fields)
 		
 		#for each shape in the dataset
-		for i in tqdm(dataset.get_geom_field(field)):
-			rb = dataset.get_geom_raster(polygon_field=field, polygon_id=i, normalize_if_possible=True)
+		for i in tqdm(range(len(geometry_columns))):
+			#selecting the current geometry
+			cg = geometry_columns.iloc[i,:]
+			selector = {key : cg[key] for key in fields}
+			
+			#a raster block
+			rb = dataset.get_geom_raster(selector, normalize_if_possible=True)
 			
 			if rb is None:
 				#if rb is None it means that we have asked for data outside the image
@@ -41,21 +47,23 @@ class indexes(Task):
 			else:
 				#collecting required data
 				(ortho, shapes) = dataset.get_files()
-				(cx, cy) = dataset.get_geom_centroid(polygon_field=field, polygon_id=i)
+				(cx, cy) = dataset.get_geom_centroid(selector)
 				
 				#starting to build the saved dict
 				d = {
-					'type' : dataset.get_type(), 
+					'type' : [dataset.get_type()], #this is a list for allowing straightforward dict to pd.dataframe conversion
 					'dataset' : dataset.get_title(),
 					'ortho_files' : ' '.join(ortho), 
 					'shapes_file' : shapes,
 					'channels' : ' '.join(dataset.get_channels()),
-					field : [i],
 					'centroid_x' : cx,
 					'centroid_y' : cy,
 					'threshold' : self.config['threshold'],
 					'pixels' : np.ma.count(rb)
 				}
+				
+				#adding info on the current geometry
+				d = d | selector
 				
 				#should we apply a thresholded filter?
 				if self.config['threshold'] is not None:
@@ -102,6 +110,7 @@ class indexes(Task):
 						raise ValueError('In the .ini file it is requested an unknown index: ' + current_index)
 					
 				#storing the results
+				tmp = pd.DataFrame.from_dict(d)
 				df = pd.concat([df, pd.DataFrame.from_dict(d)])
 		
 		#saving the results
