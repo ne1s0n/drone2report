@@ -43,7 +43,8 @@ class indexes(Task):
 			
 			if rb is None:
 				#if rb is None it means that we have asked for data outside the image
-				print('Warning: ROI marked with ' + field + '=' + i + ' is outside the image borders. Ignored.')
+				msg = ','.join([str(key) + '=' + str(selector[key]) for key in selector])
+				print('Warning: ROI marked with ' + msg + ' is outside the image borders. Ignored.')
 			else:
 				#collecting required data
 				(ortho, shapes) = dataset.get_files()
