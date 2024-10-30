@@ -49,7 +49,8 @@ class ROIs(Task):
 			rb = dataset.get_geom_raster(selector)
 			
 			if rb is None:
-				print('Empty ROI, field=' + str(geoid) + ' value=' + str(current))
+				msg = ','.join([str(key) + '=' + str(selector[key]) for key in selector])
+				print('Empty ROI, selected by ' + msg)
 				next
 			
 			#save the data
@@ -84,7 +85,8 @@ class ROIs(Task):
 			rb = dataset.get_geom_raster(selector, normalize_if_possible=True)
 			
 			if rb is None:
-				print('Empty ROI, field=' + str(geoid) + ' value=' + str(current))
+				msg = ','.join([str(key) + '=' + str(selector[key]) for key in selector])
+				print('Empty ROI, selected by ' + msg)
 				next
 			
 			#what are the visible channels, out of the available ones?
