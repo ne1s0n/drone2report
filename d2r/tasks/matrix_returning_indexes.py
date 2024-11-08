@@ -174,7 +174,7 @@ def GNDVI(img, channels):
 		(NIR + greenYellow)
 	) 
 
-def GNDVI(img, channels):
+def RVI(img, channels):
 	"""Simple Ratio 800/670 Ratio Vegetation Index, uses 800, 670"""
 	try:
 		w800 = img[:,:,channels.index('800')]
@@ -256,6 +256,21 @@ def VARIrededge(img, channels):
 		(w700 - w620) /
 		(w700 + w620)
 	) 
+
+def VARIrgb(img, channels):
+    """Visible Atmospherically Resistant Index, uses red, green, blue"""
+    try:
+        red   = img[:,:,channels.index('red')]
+        green = img[:,:,channels.index('green')]
+        blue  = img[:,:,channels.index('blue')]
+    except ValueError:
+        #if this clause is activated it means that the requested channel(s) are not available
+        return np.nan
+    #if we get here the index can be applied to the current image
+    return(
+        (green - red) /
+        (green + red - blue)
+    )
 
 def random_matrix(img, channels):
 	"""a random value between zero and one"""
