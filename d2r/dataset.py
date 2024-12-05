@@ -391,8 +391,10 @@ class Dataset:
 			geom = shape.geometry
 		else:
 			#building a selector with all the required fields and values
+			msg = []
 			sel = None
 			for key, value in selector.items():
+				msg.append(str(key) + '=' + str(value))
 				sel_current = self.shapes[key] == value
 				if sel is None:
 					sel = sel_current
@@ -402,8 +404,12 @@ class Dataset:
 			shape = self.shapes[sel]
 			
 			#sanity check: did we select just one row?
-			if len(shape.index) != 1:
-				raise ValueError('The choice of fields+values (from selector) selects either zero or too many polygons.')
+			if len(shape.index) == 0:
+				raise ValueError('The choice of fields+values (from selector) selects zero polygons:\n' + ', '.join(msg))
+			if len(shape.index) > 1:
+				raise ValueError('The choice of fields+values (from selector) selects more than one polygons:\n' + ', '.join(msg))
+			
+			#if we get here all is good
 			geom = shape.iloc[0,:].geometry
 		
 		return(geom)
