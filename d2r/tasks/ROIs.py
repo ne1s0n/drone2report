@@ -80,10 +80,10 @@ class ROIs(Task):
 			if os.path.isfile(outfile_current) and self.config['skip_if_already_done']:
 				print('skipping, output file already exists: ' + outfile_current)
 				return(None)
-			
+
 			#extract the data
-			rb = dataset.get_geom_raster(selector, normalize_if_possible=True)
-			
+			rb = dataset.get_geom_raster(selector, normalize_if_possible=False, rescale_to_255=self.config['png_stretch_to_0-255'])
+						
 			if rb is None:
 				msg = ','.join([str(key) + '=' + str(selector[key]) for key in selector])
 				print('Empty ROI, selected by ' + msg)
@@ -97,12 +97,6 @@ class ROIs(Task):
 			#extracting the target data
 			rb_visible = rb[:,:,selected]
 			
-			#should we stretch the data to 0-255?
-			if self.config['png_stretch_to_0-255']:
-				mymin = np.min(rb_visible)
-				mymax = np.max(rb_visible)
-				rb_visible = 255.0 * (rb_visible - mymin) / (mymax - mymin)
-
 			#saving
 			Image.fromarray(rb_visible.astype(np.uint8)).save(outfile_current)
 		

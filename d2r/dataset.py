@@ -414,17 +414,16 @@ class Dataset:
 		
 		return(geom)
 		
-	def get_geom_raster(self, selector, normalize_if_possible=False):
+	def get_geom_raster(self, selector, rescale_to_255=False, normalize_if_possible=False):
 		"""
 		Returns the raster data for the specified polygon
 		
 		Loads in memory and returns the raster data inside the specified polygon as a
 		clipped numpy ndarray in the (rows, columns, channel) order. 
 		
-		If "normalize_if_possible" is true, the function will try
-		to divide the data by the max_value parameter before returning it,
-		so to force the range of the output in the [0,1] interval. However,
-		if max_value is not defined, it will silently skip the division
+		selector: see get_geom()
+		normalize_if_possible : if True, and if "max_value" has been defined in config, all data will be divided by max_value, so to stay in the 0-1 ramge 
+		rescale_to_255 : if True the values will be rescaled to the 0-255 range
 		"""
 		#getting the requested geometry (or die trying)
 		geom = self.get_geom(selector)
@@ -436,13 +435,24 @@ class Dataset:
 		#mask the raster box with the current geometry
 		mask = self.get_geom_clipmask(geom)
 		
-		#applying the mask
+		#fix the nodata value, if present
+		if self.get_nodata_value() is not None:
+			second_mask = np.ma.getmask(np.ma.masked_equal(raster_box, self.get_nodata_value()))
+			mask = np.logical_or(mask, second_mask)
+			
+		#applying the designed mask
 		raster_box = np.ma.masked_array(raster_box, mask)
-		
+
 		#should we normalize?
 		if normalize_if_possible and self.config['max_value'] is not None:
 			raster_box = raster_box / self.config['max_value']
 		
+		#should we rescale to 0-255 ?
+		if rescale_to_255:
+			mymin = np.min(raster_box)
+			mymax = np.max(raster_box)
+			raster_box = 255 * ((raster_box - mymin) / (mymax - mymin))
+
 		#and we are done
 		return(raster_box)
 
