@@ -7,7 +7,7 @@ Clone the repository:
 
 `git clone https://github.com/ne1s0n/drone2report.git`
 
-Create the conda enviroment with:
+Install [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) (if you don't have it already) and create the conda enviroment with:
 
 ```
 cd drone2report
