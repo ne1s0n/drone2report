@@ -1,14 +1,14 @@
 """
-	In this file: functions that takes an image as a input and return a
-	matrix as output. Typically they are doing pixel-based computation.
+	In this file: functions that takes an image as input and return a
+	2D matrix as output. Typically they are doing pixel-based computation.
 	Function signature is:
 		def function(img, channels) -> 2D numpy ndarray, or np.nan if not appliable
-	As a convention, in the summary of the docstring just report the name
-	of the index plus the list of used band names 
+	As a convention, the docstring summary just reports the name
+	of the index plus the used band names 
 	
 	With:
-	 - img: numpy ndarray, axis are row, columns, channels
-	 - channels: list of string, channel names
+	 - img: numpy ndarray, axis are rows, columns, channels
+	 - channels: list of strings representing the channel names (e.g. ['red', 'green', 'blue'])
 """
 
 import numpy as np
