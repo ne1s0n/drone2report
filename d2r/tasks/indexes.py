@@ -60,7 +60,8 @@ class indexes(Task):
 					'centroid_x' : cx,
 					'centroid_y' : cy,
 					'threshold' : self.config['threshold'],
-					'pixels' : np.ma.count(rb)
+					#all channels share the same mask, so we just count the pixels on the first channel
+					'pixels' : np.ma.count(rb[:, :, 0]) 
 				}
 				
 				#adding info on the current geometry
@@ -69,7 +70,7 @@ class indexes(Task):
 				#should we apply a thresholded filter?
 				if self.config['threshold'] is not None:
 					rb = d2r.misc.thresholded_filter(rb, dataset.get_channels(), self.config['threshold'])
-				d['pixels_after_threshold'] = np.ma.count(rb)
+				d['pixels_after_threshold'] = np.ma.count(rb[:, :, 0])
 
 				#for each required index
 				for current_index in index_names:
