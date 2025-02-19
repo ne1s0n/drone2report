@@ -97,6 +97,11 @@ class ROIs(Task):
 			#extracting the target data
 			rb_visible = rb[:,:,selected]
 			
+			#taking care of missing values, which become transparent
+			height, width, channels = rb_visible.shape 
+			alpha_channel = np.where(rb_visible.mask[:,:,0], 0, 255).astype(np.uint8).reshape(height, width, 1)
+			rb_visible = np.dstack((rb_visible, alpha_channel))
+			
 			#saving
 			Image.fromarray(rb_visible.astype(np.uint8)).save(outfile_current)
 		
