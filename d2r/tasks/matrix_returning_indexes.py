@@ -13,6 +13,25 @@
 
 import numpy as np
 
+def TVI(img, channels):
+	"""Thermal vegetation index, uses red, green, blue, thermal"""
+	try:
+		red   = img[:,:,channels.index('red')]
+		green = img[:,:,channels.index('green')]
+		blue  = img[:,:,channels.index('blue')]
+		therm = img[:,:,channels.index('thermal')]
+	except ValueError:
+		#if this clause is activated it means that the requested channel(s) are not available
+		return np.nan
+	#if we get here the index can be applied to the current image
+	maxT = np.max(therm)
+	minT = np.min(therm)
+	return(
+		((maxT - therm)/(maxT - minT)) *
+		(2.0*green - red - blue) / 
+		(2.0*green + red + blue)
+	) 
+
 def NDVI(img, channels):
 	"""Normalized vegetation index, uses red, NIR"""
 	try:
