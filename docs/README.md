@@ -1,8 +1,9 @@
 # Welcome to drone2report documentation!
 
-|build-status| |docs| |coverage|
+[![Documentation Status](https://readthedocs.org/projects/drone2report/badge/?version=latest)](https://drone2report.readthedocs.io/en/latest/?badge=latest)
+[![CI](https://github.com/ne1s0n/drone2report/actions/workflows/python-package-conda.yml/badge.svg)](https://github.com/ne1s0n/drone2report/actions/workflows/python-package-conda.yml)
  
-**drone2report** : from orthophoto to summary statistics, indexes, and more.
+**drone2report** is a CLI tool to analyze orthophoto and easily extract summary statistics, indexes, and more.
 
 ## Usage
 
