@@ -1,6 +1,11 @@
 # drone2report (d2r)
 From orthophoto to summary statistics, indexes, and more.
 
+
+[![Documentation Status](https://readthedocs.org/projects/drone2report/badge/?version=latest)](https://drone2report.readthedocs.io/en/latest/?badge=latest)
+[![CI](https://github.com/ne1s0n/drone2report/actions/workflows/python-package-conda.yml/badge.svg)](https://github.com/ne1s0n/drone2report/actions/workflows/python-package-conda.yml)
+
+
 ## Installation
 
 Clone the repository:
