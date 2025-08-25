@@ -1,5 +1,6 @@
 # Welcome to drone2report documentation!
 
+|build-status| |docs| |coverage|
  
 **drone2report** : from orthophoto to summary statistics, indexes, and more.
 
