@@ -19,7 +19,7 @@ from d2r.task import task_factory
 def read_config(infile):
 	'''
 	Reads the config file in .ini format, parse some data so e.g. there's lists
-	and not many keys, returns a dictionary
+	and not many keys, returns a three objects: datasets, tasks, renders
 	'''
 	
 	#check if file exists

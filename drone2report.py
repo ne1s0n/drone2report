@@ -19,6 +19,7 @@ def drone2report(infile):
 			t.run(d)
 		print('')
 
+
 	print('\n============================ RENDERING =============================')
 	#executing all the renderings
 	for r in renders:
