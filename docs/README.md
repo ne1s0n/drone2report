@@ -30,8 +30,7 @@ The idea is that you *don't* write any python code, but just fill your apmediaom
 
 Then, if you really really want, you can write some python code (i.e. you can easily expand the pipeline with your own custom analyses).
 
-The 
-[sample_config.ini](sample_config.ini) file is self documented and should be easy enough to understand to let you start.
+The [sample_config.ini](sample_config.ini) file is self documented and should be easy enough to understand to let you start.
 
 ## The steps
 
@@ -40,6 +39,14 @@ The pipeline runs through three steps
 - data load: one data block per image. All active images are loaded (with their accompanying shapefile). Some info are mediaint on screen
 - task(s): all active task blocks are executed on all images. Their results are saved on disk
 - render(s): all renders are executed to collect and consolidate the tasks results. The results are again saved on disk
+
+## Example configuration files
+
+Here some example .ini files to run common tasks with **drone2report**:
+
+- calculate one vegetation index
+- use DEM file to obtain the average height of plots
+- etc.
 
 ## Credits
 
