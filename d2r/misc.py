@@ -133,16 +133,32 @@ def print_gdal_info(ds, title, channels=None):
 		print(" - band names: unspecified") 
 		
 def make_VRT(datasets, verbose = True):
-	"""merges all gdal datasets from a dict into a single VRT, max resolution"""
+	"""
+	merges all gdal datasets from a dict into a single VRT, max resolution.
+	As common, target projection it is used the one of the first dataset
+	"""
+	
+	#extracting the SRS (spatial reference system) from the first image
+	first_key = next(iter(datasets))
+	target_srs = datasets[first_key].GetProjection()
+	if verbose : print('Target SRS taken from ' + str(first_key))
+	
 	if verbose : print('Merging ' + str(len(datasets)) + ' images')
 	cnt = 1
 	all_stuff = []
 	for key, ds in datasets.items():
-		if verbose: print('Reading from image ' + str(cnt) + ' band ', end = '', flush=True)
+		# Reproject into the common SRS, if needed
+		if key != first_key:
+			reprojected = gdal.Warp('', ds, dstSRS=target_srs, format='MEM', resampleAlg='cubic')
+		else:
+			#no need to reproject here, it's by definition the same SRS
+			reprojected = ds
+		
+		if verbose: print('Reading from image ' + str(key) + ' band ', end = '', flush=True)
 		cnt = cnt + 1
-		for i in range(ds.RasterCount):
+		for i in range(reprojected.RasterCount):
 			if verbose: print(str(i+1) + ' ', end = '', flush=True)
-			all_stuff.append(gdal.Translate('', ds, format='MEM', bandList=[i+1]))
+			all_stuff.append(gdal.Translate('', reprojected, format='MEM', bandList=[i+1]))
 		if verbose: print('')
 	
 	vrt = gdal.BuildVRT('', all_stuff, separate=True, resolution='highest')
