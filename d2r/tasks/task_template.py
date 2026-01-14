@@ -2,6 +2,7 @@ from d2r.task import Task
 
 class task_template(Task):
 	def run(self, dataset):
+		"""the actual function to perform the custom actions"""
 		pass
 
 	def parse_config(self, config):
