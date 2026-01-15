@@ -39,6 +39,10 @@ def parse_channels(value):
 	"""parses channels: comma separated string values, which will be forced to lowercase and removed of spaces"""
 	return ''.join(value.lower().split()).split(',')
 
+def parse_python(value):
+	"""evaluates the passed string as a python statement"""
+	return eval(value)
+
 def parse_config(config):
 	"""the basic parsing of the config object, returns a dict, all keys to lower case"""
 	res = {}
