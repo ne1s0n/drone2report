@@ -155,14 +155,20 @@ class Dataset:
 		return (self.ds.RasterXSize, self.ds.RasterYSize)
 	def get_nodata_value(self):
 		return self.nodata
-	def get_resized_ds(self, target_width = None):
+	def get_resized_ds(self, target_width = None, target_height = None):
 		#taking notes for simplicity of notation
 		width, height = self.get_raster_size()
 
-		#should we rescale?
-		if target_width is not None:
+		#target values: if only one dimension specified we keep the proportions
+		if target_width is not None and target_height is None:
 			height = int(target_width * (height / width))
 			width = target_width
+		if target_height is not None and target_width is None:
+			height = target_height
+			width = int(target_height * (width / height))
+		if target_height is not None and target_width is not None:
+			width = target_width
+			height = target_height
 		
 		#resize
 		resized_ds = gdal.Translate('', self.ds, format='VRT', width=width, height=height, resampleAlg=gdal.GRA_NearestNeighbour)
@@ -171,20 +177,22 @@ class Dataset:
 		return(resized_ds)
 
 	
-	def get_raster_data(self, selected_channels, output_width = None, rescale_to_255=True, normalize_if_possible=False):
+	def get_raster_data(self, selected_channels, output_width = None, output_height = None, rescale_to_255=True, normalize_if_possible=False):
 		"""
 		Returns raster data as a masked np ndarray
 		
 		selected_channels: array of names of channels to be returned
-		output_width   : if passed, the image will be resized to have this width (height is computed to maintain proportions)
+		output_width, output_height : if passed one of the values, the image will be resized to have 
+		                              the value (the other dimension is computed to maintain proportions). If
+		                              both values are passed it is possible to change the image proportions
 		rescale_to_255 : if True the values will be rescaled to the 0-255 range
 		normalize_if_possible : if True, and if "max_value" has been defined in config, all data will be divided by max_value, so to stay in the 0-1 ramge 
 		"""
 		#a resized gdal dataset
-		resized_ds = self.get_resized_ds(target_width = output_width)
+		resized_ds = self.get_resized_ds(target_width = output_width, target_height = output_height)
 
 		#prepare room for output
-		raster_output = np.zeros((len(selected_channels), resized_ds.RasterYSize, output_width))
+		raster_output = np.zeros((len(selected_channels), resized_ds.RasterYSize, resized_ds.RasterXSize))
 		
 		#getting the channels actual indexes
 		channels = [self.get_channels().index(x) for x in selected_channels]
