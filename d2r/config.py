@@ -15,6 +15,7 @@ import pprint
 from d2r.dataset import dataset_factory
 from d2r.render import render_factory
 from d2r.task import task_factory
+import os
 
 def read_config(infile):
 	'''
@@ -30,6 +31,9 @@ def read_config(infile):
 	#instantiate a configparser object
 	config = configparser.ConfigParser(interpolation = configparser.ExtendedInterpolation())
 	config.read(infile)
+	
+	#adding secret extra config parameter: the base folder of drone2report, absolute path
+	config['DEFAULT']['__d2r_basefolder'] =  os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 	
 	#prepare the output lists, first level of keys
 	datasets = []
