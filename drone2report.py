@@ -19,14 +19,13 @@ def drone2report(infile):
 			t.run(d)
 		print('')
 
-
 	print('\n============================ RENDERING =============================')
 	#executing all the renderings
 	for r in renders:
 		print('[RENDER]', r.to_string())
 		r.run()
 		print('')
-
+	
 	#stop
 	return None
 

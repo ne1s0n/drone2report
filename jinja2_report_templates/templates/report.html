@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% for section in sections %}
+
+{{ section | safe }}
+
+{% endfor %}
+
+{% endblock %}

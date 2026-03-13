@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>{{ title }}</title>
+
+<style>
+{% include "style.css" %}
+</style>
+
+</head>
+
+<body>
+
+{% include "header.html" %}
+
+<div class="content">
+
+{% block content %}
+{% endblock %}
+
+</div>
+
+{% include "footer.html" %}
+
+</body>
+</html>
