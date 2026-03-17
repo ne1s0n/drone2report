@@ -1,5 +1,6 @@
 import importlib
 import d2r.misc
+import d2r.logger
 
 def task_factory(title, config):
 	"""factory method for dynamically instantiating Task classes"""
@@ -22,6 +23,10 @@ class Task:
 	will be called.
 	"""
 	def __init__(self, title, config):
+		#starting the log
+		self.logger = d2r.logger.get_logger('d2r.dataset', config)
+		
+		#a minimum config setup
 		self.title = title
 		self.config = self.parse_config(config)
 		
