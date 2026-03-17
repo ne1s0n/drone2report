@@ -19,7 +19,7 @@ class indexes(Task):
 
 		#check if we should do the task or not
 		if os.path.isfile(outfile) and self.config['skip_if_already_done']:
-			print('skipping. Output file already exists: ' + outfile)
+			self.logger.info('skipping. Output file already exists: ' + outfile)
 			return(None)
 
 		#room for results
@@ -44,7 +44,7 @@ class indexes(Task):
 			if rb is None:
 				#if rb is None it means that we have asked for data outside the image
 				msg = ','.join([str(key) + '=' + str(selector[key]) for key in selector])
-				print('Warning: ROI marked with ' + msg + ' is outside the image borders. Ignored.')
+				self.logger.info('Warning: ROI marked with ' + msg + ' is outside the image borders. Ignored.')
 			else:
 				#collecting required data
 				(ortho, shapes) = dataset.get_files()

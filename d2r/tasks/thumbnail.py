@@ -77,7 +77,7 @@ class thumbnail(Task):
 		
 		#check if we should do the task or not
 		if os.path.isfile(outfile) and self.config['skip_if_already_done']:
-			print('skipping, output file already exists: ' + outfile)
+			self.logger.info('skipping, output file already exists: ' + outfile)
 			return(None)
 
 		#I just need the visible channels here, for output	
