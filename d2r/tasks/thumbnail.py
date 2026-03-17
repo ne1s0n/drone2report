@@ -100,7 +100,7 @@ class thumbnail(Task):
 		#should we draw the ROI perimeters, too? 
 		if self.config['draw_rois']:
 			resized_ds = dataset.get_resized_ds(target_width = self.config['output_width'])
-			d2r.misc.draw_ROI_perimeter(ROIs=dataset.shapes, target_img=resized_ds, raster_data=output_raster, verbose = self.config['verbose'])
+			d2r.misc.draw_ROI_perimeter(ROIs=dataset.shapes, target_img=resized_ds, raster_data=output_raster, verbose = self.config['verbose'], logger = self.logger)
 		
 		#save the image
 		foo = Image.fromarray(output_raster.astype(np.uint8))

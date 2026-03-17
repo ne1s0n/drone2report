@@ -346,7 +346,7 @@ class Dataset:
 			self.channels = self.channels + self.datasources[key][1]
 			
 		#creating a joined GDAL dataset, usign VRT (virtual raster table)
-		ds = d2r.misc.make_VRT(self.ds, self.config['verbose'])
+		ds = d2r.misc.make_VRT(self.ds, self.config['verbose'], self.logger)
 
 		#at this point no dataset is open except the merged one
 		self.ds = ds

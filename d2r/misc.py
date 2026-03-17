@@ -55,13 +55,13 @@ def parse_config(config):
 			res[key.lower()] = config[key]
 	return(res)
 
-def draw_ROI_perimeter(ROIs, target_img, raster_data, verbose=False):
+def draw_ROI_perimeter(ROIs, target_img, raster_data, verbose=False, logger=None):
 	for i in range(len(ROIs.index)):
 		sh = ROIs.iloc[i,:].geometry
 		#check: is this polygon-like?
 		if not hasattr(sh, 'exterior'):
 			if verbose:
-				print('Found that geometry number ' + str(i) + ' is not polygon-like, type: ' + str(type(sh)))
+				logger.info('Found that geometry number ' + str(i) + ' is not polygon-like, type: ' + str(type(sh)))
 			#if it's not polygon-like we cannot draw it
 			continue
 		
@@ -139,7 +139,7 @@ def tostring_gdal_info(ds, title, channels=None):
 		res += " - band names: unspecified"
 	return(res)
 		
-def make_VRT(datasets, verbose = True):
+def make_VRT(datasets, verbose = True, logger=None):
 	"""
 	merges all gdal datasets from a dict into a single VRT, max resolution.
 	As common, target projection it is used the one of the first dataset
@@ -148,9 +148,9 @@ def make_VRT(datasets, verbose = True):
 	#extracting the SRS (spatial reference system) from the first image
 	first_key = next(iter(datasets))
 	target_srs = datasets[first_key].GetProjection()
-	if verbose : print('Target SRS taken from ' + str(first_key))
+	if verbose : logger.info('Target SRS taken from ' + str(first_key))
 	
-	if verbose : print('Merging ' + str(len(datasets)) + ' images')
+	if verbose : logger.info('Merging ' + str(len(datasets)) + ' images')
 	cnt = 1
 	all_stuff = []
 	for key, ds in datasets.items():
@@ -161,12 +161,11 @@ def make_VRT(datasets, verbose = True):
 			#no need to reproject here, it's by definition the same SRS
 			reprojected = ds
 		
-		if verbose: print('Reading from image ' + str(key) + ' band ', end = '', flush=True)
+		if verbose: logger.info('Reading from image ' + str(key) + ' band ')
 		cnt = cnt + 1
 		for i in range(reprojected.RasterCount):
-			if verbose: print(str(i+1) + ' ', end = '', flush=True)
+			if verbose: logger.info(str(i+1) + ' ')
 			all_stuff.append(gdal.Translate('', reprojected, format='MEM', bandList=[i+1]))
-		if verbose: print('')
 	
 	vrt = gdal.BuildVRT('', all_stuff, separate=True, resolution='highest')
 	return(vrt)
