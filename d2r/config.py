@@ -15,7 +15,6 @@ import pprint
 from d2r.dataset import dataset_factory
 from d2r.render import render_factory
 from d2r.task import task_factory
-import os
 
 def read_config(infile):
 	'''
