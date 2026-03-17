@@ -116,25 +116,28 @@ def thresholded_filter(raster, channels, filter_string):
 		
 	return(raster)
 
-def print_gdal_info(ds, title, channels=None):
+def tostring_gdal_info(ds, title, channels=None):
+	res = ''
 	"""prints information on the passed gdal dataset"""
 	if title != '':
-		print(' - title: ' + title)
-	print(" - projection: ", ds.GetProjection())  # get projection
+		res += ' - title: ' + title
+	res += " - projection: " + ds.GetProjection()  # get projection
 	gt = ds.GetGeoTransform() 
-	print(" - geotransform:", 
-		' minX=', str(gt[0]), 
-		' xRes=', str(gt[1]), 
-		' yRot=', str(gt[2]), 
-		' minY=', str(gt[3]), 
-		' xRot=', str(gt[4]), 
-		' yRes=', str(gt[5]))
-	print(" - size (cols, rows, bands): " + str(ds.RasterXSize) + ',' + str(ds.RasterYSize) +  ',' + str(ds.RasterCount))  
+	res += (" - geotransform:" + 
+		' minX=' + str(gt[0]) + 
+		' xRes=' + str(gt[1]) + 
+		' yRot=' + str(gt[2]) + 
+		' minY=' + str(gt[3]) + 
+		' xRot=' + str(gt[4]) + 
+		' yRes=' + str(gt[5])
+		)
+	res += " - size (cols, rows, bands): " + str(ds.RasterXSize) + ',' + str(ds.RasterYSize) +  ',' + str(ds.RasterCount)  
 		  
 	if channels is not None:
-		print(" - band names: ", str(channels)) 
+		res += " - band names: " + str(channels)
 	else:
-		print(" - band names: unspecified") 
+		res += " - band names: unspecified"
+	return(res)
 		
 def make_VRT(datasets, verbose = True):
 	"""

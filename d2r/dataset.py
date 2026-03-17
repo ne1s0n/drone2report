@@ -12,6 +12,7 @@ import configparser
 import os.path
 import d2r.config
 import d2r.misc
+import d2r.logger
 
 def dataset_factory(title, config):
 	if not config.getboolean('active'):
@@ -27,6 +28,9 @@ def dataset_factory(title, config):
 class Dataset:
 	def __init__(self, title, config):
 		self.title = title
+		
+		#starting the log
+		self.logger = d2r.logger.get_logger('d2r.dataset', config)
 		
 		#parsing series, progressive number (if present)
 		pieces = title.split(' ')
@@ -232,8 +236,8 @@ class Dataset:
 		"""initializes the dataset structures for the corresponding datasource entry"""
 		self.ds = {}
 		
-		print('\n---------------------------')
-		print('DATASET ' + self.title)
+		self.logger.info('\n---------------------------')
+		self.logger.info('DATASET ' + self.title)
 		for key in self.datasources:
 			self.__load_one_dataset(key)
 
@@ -242,17 +246,16 @@ class Dataset:
 		
 		#should we print some info about the resulting joined dataset?
 		if 	self.joined_sources:
-			d2r.misc.print_gdal_info(self.ds, 'merged image', self.channels) 
-			print('\n')
+			self.logger.info(d2r.misc.tostring_gdal_info(self.ds, 'merged image', self.channels) + '\n')
 		
 		#listing visible channels
-		print(' Visible bands (rendered as RGB): ' + str(self.config['visible_channels']) + '\n')
+		self.logger.info(' Visible bands (rendered as RGB): ' + str(self.config['visible_channels']) + '\n')
 			
 		#opening shapes file
-		print('opening shape file ' + self.config['shapes_file'])
+		self.logger.info('opening shape file ' + self.config['shapes_file'])
 		self.shapes = gpd.read_file(self.config['shapes_file'])
-		print('- found ' + str(len(self.shapes.index)) + ' ROIs with fields ' + str(list(self.shapes)))
-		print('- fields used to uniquely identify a shape: ' + str(self.config['shapes_index']))
+		self.logger.info('- found ' + str(len(self.shapes.index)) + ' ROIs with fields ' + str(list(self.shapes)))
+		self.logger.info('- fields used to uniquely identify a shape: ' + str(self.config['shapes_index']))
 
 		#at this point self.ds is a single gdal dataset (it's not a dict
 		#anymore). Let's play it safe and convert the shapefile orthomosaic 
@@ -270,11 +273,11 @@ class Dataset:
 		"""initializes the dataset structures for the corresponding datasource entry"""
 		infile = self.datasources[dataset_key][0]
 		channels = self.datasources[dataset_key][1]
-		print('Opening image file ' + infile)
+		self.logger.info('Opening image file ' + infile)
 		self.ds[dataset_key] = gdal.Open(infile, gdal.GA_ReadOnly)
 		#local copy for leaner code
 		ds =  self.ds[dataset_key]
-		d2r.misc.print_gdal_info(ds, dataset_key, channels)
+		self.logger.info(d2r.misc.tostring_gdal_info(ds, dataset_key, channels))
 		
 		#check on band names
 		if len(channels) != ds.RasterCount:
@@ -306,11 +309,11 @@ class Dataset:
 				msg = msg + ' - from config ini file   : ' + str(self.config['nodata']) + '\n'
 				msg = msg + ' - from actual image file : ' + str(nodata) + '\n'
 				msg = msg + 'We will use the config value. To use the image one remove the value from config ini file'
-				print(msg)
+				self.logger.info(msg)
 		else:
 			#storing the newfound nodata value from image file
 			self.nodata = nodata
-		print(' - value used for nodata pixels: ' + str(self.nodata))
+		self.logger.info(' - value used for nodata pixels: ' + str(self.nodata))
 		
 		#at this point we set the nodata value to what specified
 		for i in range(1, ds.RasterCount + 1):  # Bands are 1-indexed
@@ -319,7 +322,7 @@ class Dataset:
 				band.SetNoDataValue(nodata)
 
 		#we are done, print an empty line for formatting
-		print("")
+		self.logger.info("")
 
 	def __join_datasets(self):
 		"""joins all available gdal datasets and channels"""
@@ -357,7 +360,7 @@ class Dataset:
 				
 	def get_reference_datasource(self):
 		"""returns the datasource key for the GDAL dataset to be used as reference for resolution"""
-		print('TODO: function get_reference_datasource() just returns the first image, we should implement a smartest strategy')
+		self.logger.info('TODO: function get_reference_datasource() just returns the first image, we should implement a smartest strategy')
 		return(list(self.datasources.keys())[0])
 
 	def get_files(self):
