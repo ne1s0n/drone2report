@@ -1,10 +1,16 @@
 name: drone2report
 channels:
+  - bioconda
+  - conda-forge
   - defaults
+  - r
 dependencies:
   - _libgcc_mutex=0.1=main
   - _openmp_mutex=5.1=1_gnu
+  - absl-py=2.4.0=pyhd8ed1ab_0
+  - affine=2.4.0=pyhd8ed1ab_1
   - aom=3.6.0=h6a678d5_0
+  - astunparse=1.6.3=pyhd8ed1ab_3
   - attrs=23.1.0=py312h06a4308_0
   - blas=1.0=mkl
   - blosc=1.21.3=h6a678d5_0
@@ -22,22 +28,20 @@ dependencies:
   - certifi=2024.8.30=py312h06a4308_0
   - cfitsio=3.470=h5893167_7
   - charls=2.2.0=h2531618_0
-  - charset-normalizer=3.3.2=pyhd3eb1b0_0
   - click=8.1.7=py312h06a4308_0
-  - click-plugins=1.1.1=pyhd3eb1b0_0
-  - cligj=0.7.2=pyhd3eb1b0_0
   - contourpy=1.2.0=py312hdb19cb5_0
-  - cycler=0.11.0=pyhd3eb1b0_0
   - cyrus-sasl=2.1.28=h52b45da_1
   - dav1d=1.2.1=h5eee18b_0
   - dbus=1.13.18=hb2f20db_0
   - expat=2.6.2=h6a678d5_0
   - fiona=1.9.5=py312h526ad5a_0
+  - flatbuffers=24.3.25=h6a678d5_0
   - folium=0.14.0=py312h06a4308_0
   - fontconfig=2.14.1=h55d465d_3
   - fonttools=4.51.0=py312h5eee18b_0
   - freetype=2.12.1=h4a9f257_0
   - freexl=2.0.0=hf309648_0
+  - gast=0.7.0=pyhd8ed1ab_0
   - gdal=3.6.2=py312h51fade5_5
   - geopandas=0.14.2=py312h06a4308_0
   - geopandas-base=0.14.2=py312h06a4308_0
@@ -46,14 +50,18 @@ dependencies:
   - giflib=5.2.1=h5eee18b_3
   - glib=2.78.4=h6a678d5_0
   - glib-tools=2.78.4=h6a678d5_0
+  - google-pasta=0.2.0=pyhd8ed1ab_2
+  - grpcio=1.62.2=py312h6a678d5_0
   - gst-plugins-base=1.14.1=h6a678d5_1
   - gstreamer=1.14.1=h5eee18b_1
+  - h5py=3.12.1=py312hc0802c4_0
   - hdf4=4.2.13=h3ca952b_2
   - hdf5=1.12.1=h2b7332f_3
   - icu=73.1=h6a678d5_0
   - idna=3.7=py312h06a4308_0
   - imagecodecs=2023.1.23=py312h81b8100_1
   - imageio=2.33.1=py312h06a4308_0
+  - importlib-metadata=8.7.0=pyhe01879c_1
   - intel-openmp=2023.1.0=hdb19cb5_46306
   - jinja2=3.1.4=py312h06a4308_0
   - joblib=1.4.2=py312h06a4308_0
@@ -61,12 +69,14 @@ dependencies:
   - json-c=0.16=h5eee18b_0
   - jxrlib=1.1=h7b6447c_2
   - kealib=1.5.0=hd940352_1
+  - keras=3.11.2=pyh753f3f9_0
   - kiwisolver=1.4.4=py312h6a678d5_0
   - krb5=1.20.1=h143b758_1
   - lazy_loader=0.4=py312h06a4308_0
   - lcms2=2.12=h3be6417_0
   - ld_impl_linux-64=2.38=h1181459_1
   - lerc=3.0=h295c915_0
+  - libabseil=20240116.2=cxx17_h6a678d5_0
   - libaec=1.0.4=he6710b0_1
   - libavif=0.11.1=h5eee18b_0
   - libboost=1.82.0=h109eef0_2
@@ -87,6 +97,7 @@ dependencies:
   - libgfortran5=11.2.0=h1234567_1
   - libglib=2.78.4=hdc74915_0
   - libgomp=11.2.0=h1234567_1
+  - libgrpc=1.62.2=h2d74bed_0
   - libiconv=1.16=h5eee18b_3
   - libkml=1.3.0=h096b73e_7
   - libllvm14=14.0.6=hdb19cb5_3
@@ -94,6 +105,7 @@ dependencies:
   - libnghttp2=1.57.0=h2d74bed_0
   - libpng=1.6.39=h5eee18b_0
   - libpq=12.17=hdbd6064_0
+  - libprotobuf=4.25.3=he621ea3_0
   - libspatialindex=1.9.3=h2531618_0
   - libspatialite=5.1.0=h040243e_1
   - libssh2=1.11.0=h251f7ec_0
@@ -108,15 +120,21 @@ dependencies:
   - libzopfli=1.0.3=he6710b0_0
   - lz4-c=1.9.4=h6a678d5_1
   - mapclassify=2.5.0=py312h06a4308_0
+  - markdown=3.10.2=pyhcf101f3_0
+  - markdown-it-py=4.0.0=pyhd8ed1ab_0
   - markupsafe=2.1.3=py312h5eee18b_0
   - matplotlib=3.8.4=py312h06a4308_0
   - matplotlib-base=3.8.4=py312h526ad5a_0
+  - mdurl=0.1.2=pyhd8ed1ab_1
   - minizip=4.0.3=hf59b114_0
   - mkl=2023.1.0=h213fc3f_46344
   - mkl-service=2.4.0=py312h5eee18b_1
   - mkl_fft=1.3.8=py312h5eee18b_0
   - mkl_random=1.2.4=py312hdb19cb5_0
+  - ml_dtypes=0.4.1=py312hc74f9fe_0
   - mysql=5.7.24=h721c034_2
+  - namex=0.1.0=pyhd8ed1ab_0
+  - narwhals=2.18.0=pyhcf101f3_0
   - ncurses=6.4=h6a678d5_0
   - networkx=3.3=py312h06a4308_0
   - nspr=4.35=h6a678d5_0
@@ -126,17 +144,22 @@ dependencies:
   - numpy-base=1.26.4=py312h0da6c21_0
   - openjpeg=2.5.2=he7f1fd0_0
   - openssl=3.0.15=h5eee18b_0
+  - opt_einsum=3.4.0=pyhd8ed1ab_1
+  - optree=0.14.1=py312hdb19cb5_0
   - packaging=24.1=py312h06a4308_0
   - pandas=2.2.2=py312h526ad5a_0
   - pcre2=10.42=hebb0a14_1
   - pillow=10.4.0=py312h5eee18b_0
   - pip=24.2=py312h06a4308_0
   - pixman=0.40.0=h7f8727e_1
+  - plotly=6.6.0=pyhd8ed1ab_0
   - ply=3.11=py312h06a4308_1
   - poppler=22.12.0=h9614445_3
   - poppler-data=0.4.11=h06a4308_1
   - proj=9.3.1=he5811b7_0
+  - protobuf=4.25.3=py312he36ed58_1
   - pybind11-abi=5=hd3eb1b0_0
+  - pygments=2.19.2=pyhd8ed1ab_0
   - pyparsing=3.0.9=py312h06a4308_0
   - pyproj=3.6.1=py312h6268720_0
   - pyqt=5.15.10=py312h6a678d5_0
@@ -144,12 +167,16 @@ dependencies:
   - pysocks=1.7.1=py312h06a4308_0
   - python=3.12.4=h5148396_1
   - python-dateutil=2.9.0post0=py312h06a4308_2
+  - python-flatbuffers=25.9.23=pyh1e1bc0e_0
   - python-tzdata=2023.3=pyhd3eb1b0_0
   - pytz=2024.1=py312h06a4308_0
   - qhull=2020.2=hdb19cb5_2
   - qt-main=5.15.2=h53bd1ea_10
+  - rasterio=1.4.3=py312h720536b_0
+  - re2=2022.04.01=h27087fc_0
   - readline=8.2=h5eee18b_0
   - requests=2.32.3=py312h06a4308_0
+  - rich=14.3.3=pyhcf101f3_0
   - rtree=1.0.1=py312h06a4308_0
   - scikit-image=0.23.2=py312h526ad5a_0
   - scikit-learn=1.5.1=py312h526ad5a_0
@@ -157,25 +184,41 @@ dependencies:
   - setuptools=72.1.0=py312h06a4308_0
   - shapely=2.0.5=py312h1789038_0
   - sip=6.7.12=py312h6a678d5_0
-  - six=1.16.0=pyhd3eb1b0_1
   - snappy=1.2.1=h6a678d5_0
   - sqlite=3.45.3=h5eee18b_0
   - tbb=2021.8.0=hdb19cb5_0
+  - tensorboard=2.17.1=pyhd8ed1ab_0
+  - tensorboard-data-server=0.7.0=py312h52d8a92_1
+  - tensorflow=2.17.0=cpu_py312hbca4264_0
+  - tensorflow-base=2.17.0=cpu_py312he58cd35_0
+  - tensorflow-estimator=2.17.0=cpu_py312hfedf350_0
+  - termcolor=3.3.0=pyhd8ed1ab_0
   - threadpoolctl=3.5.0=py312he106c6f_0
   - tifffile=2023.4.12=py312h06a4308_0
   - tiledb=2.3.3=h77177df_3
   - tk=8.6.14=h39e8969_0
   - tornado=6.4.1=py312h5eee18b_0
   - tqdm=4.66.5=py312he106c6f_0
-  - tzdata=2024a=h04d1e81_0
+  - typing-extensions=4.15.0=h396c80c_0
+  - typing_extensions=4.15.0=pyhcf101f3_0
   - unicodedata2=15.1.0=py312h5eee18b_0
   - uriparser=0.9.7=h5eee18b_0
   - urllib3=2.2.2=py312h06a4308_0
+  - werkzeug=3.1.6=pyhcf101f3_0
   - wheel=0.43.0=py312h06a4308_0
+  - wrapt=1.17.0=py312h5eee18b_0
   - xerces-c=3.2.4=h6a678d5_1
   - xyzservices=2022.9.0=py312h06a4308_1
   - xz=5.4.6=h5eee18b_1
   - zfp=1.0.0=h6a678d5_0
+  - zipp=3.23.0=pyhcf101f3_1
   - zlib=1.2.13=h5eee18b_1
   - zstd=1.5.5=hc292b87_2
+  - pip:
+    - charset-normalizer==3.3.2
+    - click-plugins==1.1.1
+    - cligj==0.7.2
+    - cycler==0.11.0
+    - six==1.16.0
+    - tzdata==2023.3
 prefix: /home/nelson/miniconda3/envs/drone2report
