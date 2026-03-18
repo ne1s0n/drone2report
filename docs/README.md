@@ -22,7 +22,7 @@ Activate the environment:
 
 `conda activate drone2report`
 
-then fill an apmediaomediaiate .ini file and run:
+then fill a custom .ini file and run:
 
 `python3 drone2report.py <your config .ini file>`
 
@@ -38,7 +38,7 @@ The pipeline runs through three steps
 
 - data load: one data block per image. All active images are loaded (with their accompanying shapefile). Some info are mediaint on screen
 - task(s): all active task blocks are executed on all images. Their results are saved on disk
-- render(s): all renders are executed to collect and consolidate the tasks results. The results are again saved on disk
+- render(s): all renders are executed to collect and consolidate the tasks results. The results are again saved on disk. A special render is called [RENDER report] and allows to generate an output .html report. In the default configuration it is possible to collect the output of the various log data and to plot the results of [TASK indexes]
 
 ## Example configuration files
 
