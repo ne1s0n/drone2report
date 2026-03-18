@@ -1,7 +1,10 @@
 from jinja2 import Environment, FileSystemLoader
 from datetime import date
-from d2r.render import Render
 import os
+import glob
+
+from d2r.render import Render
+from d2r.misc import indexfile_to_html
 
 class report(Render):
 	
@@ -40,18 +43,37 @@ class report(Render):
 		
 		#instantiate the auxilliary object that will take care of all operations
 		report = self.__d2rReport(jtf)
-
-		#adding one section for one output analysis
-		report.add_section(
-			"analysis_block.html",
-			{"log": "Loading drone images..."}
-		)
-
-		#adding another section
-		report.add_section(
-			"analysis_block.html",
-			{"log": "Info for new block"}
-		)
+		
+		#adding all the found logs
+		for logfile in glob.glob(self.config['outfolder'] + '*.log'):
+			#reading the log in
+			with open(logfile, 'r') as file:
+				log_content = file.read()
+			
+			#adding to the report
+			report.add_section(
+				"analysis_block.html",
+				{"log_file": logfile, "log_content": log_content}
+			)
+		
+		#adding the plots for all the found indexes
+		for indexfile in glob.glob(self.config['index_folder'] + '/*.csv'):
+			#data to html
+			my_html = indexfile_to_html(indexfile)
+			
+			#for each combination of dataset and trait
+			for key, content in my_html.items():
+				#adding the title/subtitle
+				report.add_section(
+					"section_title.html",
+					{"title": indexfile, "subtitle": key}
+				)
+				
+				#adding the plot
+				report.add_section(
+					"raw_html.html",
+					{"content": content}
+				)
 
 		#rendering takes care also of header and footer
 		report.render(
@@ -73,3 +95,4 @@ class report(Render):
 		#(if any are preent)
 		return(res)
 
+	

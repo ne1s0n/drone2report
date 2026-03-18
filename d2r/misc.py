@@ -1,10 +1,13 @@
 import os
+import pandas as pd
 import numpy as np
 import skimage.draw
 import pprint
+from osgeo import gdal
+import plotly.express as px
+
 import d2r.dataset
 import d2r.tasks.matrix_returning_indexes as mri
-from osgeo import gdal
 
 def find_case_insensitve(dirname, extensions):
 	"""find all files in passed folder with the passed extension, case insensitive"""
@@ -169,3 +172,76 @@ def make_VRT(datasets, verbose = True, logger=None):
 	
 	vrt = gdal.BuildVRT('', all_stuff, separate=True, resolution='highest')
 	return(vrt)
+
+def indexfile_to_html(infile):
+	'''reads the passed .csv file, created by index tasks and returns a
+	   dictionary of embeddable html strings, one per dataset/index combination
+	'''   
+
+	#all plots (each one html) will be saved into a list
+	returned_html = {}
+
+	#reading data in, check if it's in the expected format 
+	#TODO
+	df = pd.read_csv(infile)
+
+	#----- removing useless columns
+	#extract column names from df
+	column_names = df.columns
+
+	#select all names that have the "_mean" suffix
+	target_traits = [name for name in column_names if name.endswith('_mean')]
+
+	#----- building tooltip
+	#selecting columns for tooltip
+	column_tooltips = df.columns
+
+	#removing from column_names all items with a suffix that indicates it's a index-related column
+	column_tooltips = [name for name in column_tooltips if not name.endswith(('_min', '_max', '_mean', '_median', '_std'))]
+
+	#removing unwanted (constant) columns
+	column_tooltips = [name for name in column_tooltips if name not in [
+		'type', 'dataset', 'ortho_files', 'shapes_file', 'channels', 
+		'centroid_x', 'centroid_y', 'threshold', 'pixels'                                                    
+	]]
+
+	#build a temporary dataframe, column by column
+	res = pd.DataFrame()
+	for column in column_tooltips:
+	  #building the target string "column=value"
+	  temp_df = pd.DataFrame()
+	  temp_df[column + '_name'] = pd.Series(column, index=df.index)
+	  temp_df[column] = df[column].astype(str)
+	  temp_df = temp_df.T.agg('='.join)
+	  #adding to the resulting dataframe
+	  res = pd.concat([res, temp_df], axis=1)
+
+	#pasting together all the columns
+	res = res.T.agg('<br>'.join)
+
+	#adding to the original dataframe
+	df['tooltip'] = res
+
+	#------ build the actual with plotly plot, save the html to be embedded into a file
+	#cycle through all subsets for the "dataset" column
+	for subset in df['dataset'].unique():
+		#filter the rows for the current value of subset
+		subset_df = df[df['dataset'] == subset]
+		#cycle through target traits
+		for trait in target_traits:
+			#scatter plot with tooltip
+			fig = px.scatter(subset_df, x='centroid_x', y='centroid_y', color=trait, hover_name = 'tooltip')
+
+			#saving
+			key = f"subset={subset} trait={trait}"
+			returned_html[key] = fig.to_html(full_html=False)
+
+			#building the output file name
+			#outfile = key + '.html'
+			#outfile = os.path.join(outfolder, outfile) #to be updated with the run date
+
+			#saving
+			#fig.write_html(outfile)  
+
+	#and we are done
+	return(returned_html)
