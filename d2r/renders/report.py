@@ -59,24 +59,25 @@ class report(Render):
 				{"log_file": logfile, "log_content": log_content}
 			)
 		
-		#adding the plots for all the found indexes
-		for indexfile in glob.glob(self.config['index_folder'] + '/*.csv'):
-			#data to html
-			my_html = indexfile_to_html(indexfile)
-			
-			#for each combination of dataset and trait
-			for key, content in my_html.items():
-				#adding the title/subtitle
-				report.add_section(
-					"section_title.html",
-					{"title": indexfile, "subtitle": key}
-				)
+		#adding the plots for all the found indexes, if required
+		if self.config['index_folder'] is not None:
+			for indexfile in glob.glob(self.config['index_folder'] + '/*.csv'):
+				#data to html
+				my_html = indexfile_to_html(indexfile)
 				
-				#adding the plot
-				report.add_section(
-					"raw_html.html",
-					{"content": content}
-				)
+				#for each combination of dataset and trait
+				for key, content in my_html.items():
+					#adding the title/subtitle
+					report.add_section(
+						"section_title.html",
+						{"title": indexfile, "subtitle": key}
+					)
+					
+					#adding the plot
+					report.add_section(
+						"raw_html.html",
+						{"content": content}
+					)
 
 		#rendering takes care also of header and footer
 		report.render(
