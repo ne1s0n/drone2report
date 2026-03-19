@@ -10,6 +10,9 @@ import d2r.misc
 
 class thumbnail(Task):
 	def run(self, dataset):
+		#a bit of interface
+		self.logger.info('TASK:' + self.to_string() + ', DATASET:' + dataset.to_string() )
+
 		#computing the index/channel over all image
 		myindex = self._compute_index(self.config['index_investigated'], dataset)	
 		mysubindex = self._compute_index(self.config['subindex_investigated'], dataset)	

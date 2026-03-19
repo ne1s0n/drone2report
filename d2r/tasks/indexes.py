@@ -12,6 +12,9 @@ import d2r.tasks.array_returning_indexes  as ari
 
 class indexes(Task):
 	def run(self, dataset):
+		#a bit of interface
+		self.logger.info('TASK:' + self.to_string() + ', DATASET:' + dataset.to_string() )
+		
 		#the output path
 		outfile = os.path.join(self.config['outfolder'], 'indexes_' + dataset.get_title() + '.csv')
 		path = pathlib.Path(self.config['outfolder'])
@@ -21,7 +24,8 @@ class indexes(Task):
 		if os.path.isfile(outfile) and self.config['skip_if_already_done']:
 			self.logger.info('skipping. Output file already exists: ' + outfile)
 			return(None)
-
+		self.logger.info('results saved to: ' + outfile)
+		
 		#room for results
 		df = None
 		

@@ -2,6 +2,8 @@ from d2r.render import Render
 
 class render_template(Render):
 	def run(self):
+		#a bit of interface
+		self.logger.info('RENDER: template for renders')
 		pass
 		
 	def parse_config(self, config):

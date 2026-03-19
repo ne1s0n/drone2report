@@ -23,6 +23,10 @@ class Render:
 	will be called.
 	"""
 	def __init__(self, title, config):
+		#starting the log
+		self.logger = d2r.logger.get_logger('d2r.render', config)
+		
+		#minimum setup
 		self.title = title
 		self.config = self.parse_config(config)
 

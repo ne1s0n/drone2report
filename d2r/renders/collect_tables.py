@@ -9,6 +9,9 @@ import pprint
 
 class collect_tables(Render):
 	def run(self):
+		#a bit of interface
+		self.logger.info('RENDER:' + self.to_string())
+		
 		#room for results
 		outfolder = pathlib.Path(self.config['outfolder'])
 		outfolder.mkdir(parents=True, exist_ok=True)

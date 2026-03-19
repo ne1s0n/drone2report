@@ -10,6 +10,9 @@ import d2r.misc
 
 class ROIs(Task):
 	def run(self, dataset):
+		#a bit of interface
+		self.logger.info('TASK:' + self.to_string() + ', DATASET:' + dataset.to_string())
+		
 		#making sure the output subfolder do exists
 		path = pathlib.Path(self.config['outfolder'], dataset.get_title())
 		path.mkdir(parents=True, exist_ok=True)

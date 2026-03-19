@@ -38,6 +38,9 @@ class report(Render):
 				f.write(html)
 	
 	def run(self):
+		#a bit of interface
+		self.logger.info('RENDER:' + self.to_string())
+		
 		#for simplicity, the jinja2 template folder goes into a local variable
 		jtf = os.path.join(self.config['__d2r_basefolder'], 'jinja2_report_templates')
 		

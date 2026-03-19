@@ -5,7 +5,7 @@ class task_template(Task):
 		"""the actual function to perform the custom actions"""
 		
 		#just logging that we invoked this function
-		self.logger.info('Invoked the run() method')
+		self.logger.info('TASK: empty_template, DATASET:' + dataset.to_string() )
 		
 		pass
 
