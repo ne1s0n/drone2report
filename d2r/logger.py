@@ -7,15 +7,18 @@ import os
 def get_logger(logname, config):
 	logger = logging.getLogger(logname)
 	
+	if logger.handlers:   #prevents duplication
+		return logger
+	
 	#making sure there's the output folder
 	os.makedirs(config['outfolder'], exist_ok=True)
-	outfile = os.path.join(config['outfolder'], "mylog.log") #to be updated with the run date
+	outfile = os.path.join(config['outfolder'], "d2r.log") #to be updated with the run date
 	
 	#we use INFO level as default
 	logger.setLevel(logging.INFO)
 
 	#formatter (shared by stdout and logfile)
-	formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+	formatter = logging.Formatter('[%(asctime)s %(levelname)s] %(message)s')
 
 	#console handler (stdout)
 	console_handler = logging.StreamHandler(sys.stdout)
@@ -34,4 +37,3 @@ def get_logger(logname, config):
 	
 	#done
 	return(logger)
-
