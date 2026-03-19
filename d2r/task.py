@@ -24,7 +24,7 @@ class Task:
 	"""
 	def __init__(self, title, config):
 		#starting the log
-		self.logger = d2r.logger.get_logger('d2r.dataset', config)
+		self.logger = d2r.logger.get_logger('d2r.task', config)
 		
 		#a minimum config setup
 		self.title = title

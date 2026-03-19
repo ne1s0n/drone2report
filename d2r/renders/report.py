@@ -45,7 +45,7 @@ class report(Render):
 		report = self.__d2rReport(jtf)
 		
 		#adding all the found logs
-		for logfile in glob.glob(self.config['outfolder'] + '/*.log'):
+		for logfile in glob.glob(self.config['logfolder'] + '/*.log'):
 			#reading the log in
 			with open(logfile, 'r') as file:
 				log_content = file.read()

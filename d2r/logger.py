@@ -11,8 +11,8 @@ def get_logger(logname, config):
 		return logger
 	
 	#making sure there's the output folder
-	os.makedirs(config['outfolder'], exist_ok=True)
-	outfile = os.path.join(config['outfolder'], "d2r.log") #to be updated with the run date
+	os.makedirs(config['logfolder'], exist_ok=True)
+	outfile = os.path.join(config['logfolder'], logname + ".log") #to be updated with the run date
 	
 	#we use INFO level as default
 	logger.setLevel(logging.INFO)
