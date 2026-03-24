@@ -59,11 +59,15 @@ class report(Render):
 				{"log_file": logfile, "log_content": log_content}
 			)
 		
+		#plotly javascript library must be included only once
+		include_plotlyjs = True
+		
 		#adding the plots for all the found indexes, if required
 		if self.config['index_folder'] is not None:
 			for indexfile in glob.glob(self.config['index_folder'] + '/*.csv'):
 				#data to html
-				my_html = indexfile_to_html(indexfile)
+				my_html = indexfile_to_html(indexfile, include_plotlyjs)
+				include_plotlyjs = False
 				
 				#for each combination of dataset and trait
 				for key, content in my_html.items():

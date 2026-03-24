@@ -173,9 +173,11 @@ def make_VRT(datasets, verbose = True, logger=None):
 	vrt = gdal.BuildVRT('', all_stuff, separate=True, resolution='highest')
 	return(vrt)
 
-def indexfile_to_html(infile):
+def indexfile_to_html(infile, include_plotlyjs = False):
 	'''reads the passed .csv file, created by index tasks and returns a
-	   dictionary of embeddable html strings, one per dataset/index combination
+	   dictionary of embeddable html strings, one per dataset/index combination.
+	   Note that the default is to not include the plotly library (~3MB)
+	   which needs to be included at least once for the plot to work
 	'''   
 
 	#all plots (each one html) will be saved into a list
@@ -234,7 +236,7 @@ def indexfile_to_html(infile):
 
 			#saving
 			key = f"subset={subset} trait={trait}"
-			returned_html[key] = fig.to_html(full_html=False)
+			returned_html[key] = fig.to_html(full_html=False, include_plotlyjs=include_plotlyjs)
 
 			#building the output file name
 			#outfile = key + '.html'
